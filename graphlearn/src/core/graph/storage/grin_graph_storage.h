@@ -29,6 +29,7 @@ limitations under the License.
 #include "vineyard/graph/grin/include/partition/partition.h"
 #include "vineyard/graph/grin/include/property/propertytable.h"
 #include "vineyard/graph/grin/include/property/property.h"
+#include "vineyard/graph/grin/include/property/propertylist.h"
 
 #include "core/graph/storage/graph_storage.h"
 #include "core/graph/storage/grin_storage_utils.h"
@@ -161,9 +162,60 @@ public:
     }
   }
 
-  virtual Attribute GetEdgeAttribute(IdType edge_id) const = 0;
+  virtual Attribute GetEdgeAttribute(IdType edge_id) {
+    if (!side_info_->IsAttributed()) {
+      return Attribute();
+    }
+    if (edge_id >= edge_list_.size()) {
+      return Attribute(AttributeValue::Default(side_info_), false);
+    }
 
-  virtual Array<IdType> GetNeighbors(IdType src_id) const = 0;
+    auto attr = NewDataHeldAttributeValue();
+    GRIN_EDGE e = edge_list_[edge_id];
+    GRIN_EDGE_PROPERTY_LIST properties = grin_get_edge_property_list_by_type(
+      graph_, edge_type_);
+    auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
+    GRIN_ROW row = grin_get_row_from_edge_property_table(
+      graph_, edge_table, e, properties);
+
+    auto property_size = grin_get_edge_property_list_size(graph_, properties);
+    for (size_t i = 0; i < property_size; ++i) {
+      auto property = grin_get_edge_property_from_list(graph_, properties, i);
+      auto dtype = grin_get_edge_property_data_type(graph_, property);
+      auto value = grin_get_value_from_row(graph_, row, dtype, i);
+      switch(dtype) {
+      case GRIN_DATATYPE::Int32:
+      case GRIN_DATATYPE::UInt32:
+      case GRIN_DATATYPE::Int64:
+      case GRIN_DATATYPE::UInt64:
+        if (side_info_->i_num > 0) {
+          attr->Add(*static_cast<const int64_t*>(value));
+        }
+        break;
+      case GRIN_DATATYPE::Float:
+      case GRIN_DATATYPE::Double:
+        if (side_info_->f_num > 0) {
+          attr->Add(*static_cast<const float*>(value));
+        }
+        break;
+      
+      case GRIN_DATATYPE::String:
+        if (side_info_->s_num > 0) {
+          attr->Add(*static_cast<const std::string*>(value));
+        }
+        break;
+      
+      default:
+        break;
+      }
+    }
+
+    return Attribute(attr, true);
+  }
+
+  virtual Array<IdType> GetNeighbors(IdType src_id) {
+    
+  }
   virtual Array<IdType> GetOutEdges(IdType src_id) const = 0;
 
   virtual IndexType GetInDegree(IdType dst_id) const = 0;
