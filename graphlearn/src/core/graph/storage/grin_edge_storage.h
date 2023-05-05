@@ -35,6 +35,128 @@ namespace graphlearn {
 
 namespace io {
 
+class GrinEdgeStorage : public EdgeStorage {
+public:
+  explicit GrinEdgeStorage(
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs) {
+      graph_ = new GrinGraphStorage(
+        partitioned_graph, partition, edge_type_name, attrs);
+  }
+
+  virtual ~GrinEdgeStorage() = default;
+
+  virtual void SetSideInfo(const SideInfo* info) override {}
+  virtual const SideInfo* GetSideInfo() const override {
+    return graph_->GetSideInfo();
+  }
+
+  /// Do some re-organization after data fixed.
+  virtual void Build() override {}
+
+  /// Get the total edge count after data fixed.
+  virtual IdType Size() const override {
+    return graph_->GetEdgeCount();
+  }
+
+  /// An EDGE is made up of [ src_id, dst_id, weight, label, timestamp, attributes ].
+  /// Insert the value to get an unique id.
+  /// If the value is invalid, return -1.
+  virtual IdType Add(EdgeValue* value) {
+    throw std::runtime_error("Not implemented");
+  }
+
+  /// Lookup edge infos by edge_id, including
+  ///    source node id,
+  ///    destination node id,
+  ///    edge weight,
+  ///    edge label,
+  ///    edge timestamp,
+  ///    edge attributes
+  virtual IdType GetSrcId(IdType edge_id) const override {
+    return graph_->GetSrcId(edge_id);
+  }
+  virtual IdType GetDstId(IdType edge_id) const override {
+    return graph_->GetDstId(edge_id);
+  }
+  virtual float GetWeight(IdType edge_id) const override {
+    return graph_->GetEdgeWeight(edge_id);
+  }
+  virtual int32_t GetLabel(IdType edge_id) const override {
+    return graph_->GetEdgeLabel(edge_id);
+  }
+  virtual int64_t GetTimestamp(IdType edge_id) const override {
+    return graph_->GetEdgeTimestamp(edge_id);
+  }
+  virtual Attribute GetAttribute(IdType edge_id) const override {
+    return graph_->GetEdgeAttribute(edge_id);
+  }
+
+  /// For the needs of traversal and sampling, the data distribution is
+  /// helpful. The interface should make it convenient to get the global data.
+  ///
+  /// Get all the source node ids, the count of which is the same with Size().
+  /// These ids are not distinct.
+  virtual const IdArray GetSrcIds() const override {
+    return graph_->GetAllSrcIds();
+  }
+
+  /// Get all the destination node ids, the count of which is the same with
+  /// Size(). These ids are not distinct.
+  virtual const IdArray GetDstIds() const override {
+    return graph_->GetAllDstIds();
+  }
+  /// Get all weights if existed, the count of which is the same with Size().
+  virtual const Array<float> GetWeights() {
+    if (!graph_->side_info_->IsWeighted()) {
+      return Array<float>();
+    }
+
+    std::vector<float> weights(Size());
+    std::generate(weights.begin(), weights.end(), [this, i = 0] () mutable {
+      return GetWeight(i++);
+    });
+    return Array<float>(weights);
+  }
+  /// Get all labels if existed, the count of which is the same with Size().
+  virtual const Array<int32_t> GetLabels() {
+    if (!graph_->side_info_->IsLabeled()) {
+      return Array<int32_t>();
+    }
+
+    std::vector<int32_t> labels(Size());
+    std::generate(labels.begin(), labels.end(), [this, i = 0] () mutable {
+      return GetLabel(i++);
+    });
+    return Array<int32_t>(labels);
+  }
+  /// Get all timestamps if existed, the count of which is the same with Size().
+  virtual const Array<int64_t> GetTimestamps() {
+    if (!graph_->side_info_->IsTimestamped()) {
+      return Array<int64_t>();
+    }
+
+    std::vector<int64_t> timestamps(Size());
+    std::generate(timestamps.begin(), timestamps.end(), [this, i = 0] () mutable {
+      return GetTimestamp(i++);
+    });
+    return Array<int64_t>(timestamps);
+  }
+  /// Get all attributes if existed, the count of which is the same with Size().
+  virtual const std::vector<Attribute>* GetAttributes() {
+    if (!graph_->side_info_->IsAttributed()) {
+      return nullptr;
+    }
+    auto attrs = new std::vector<Attribute>(Size());
+    std::generate(attrs->begin(), attrs->end(), [this, i = 0] () mutable {
+      return GetAttribute(i++);
+    });
+    return attrs;
+  }
+
+private:
+  GrinGraphStorage *graph_ = nullptr;
+};
 };
 
 };
