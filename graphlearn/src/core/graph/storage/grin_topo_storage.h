@@ -24,16 +24,16 @@ limitations under the License.
 namespace graphlearn {
 namespace io {
 
-class VineyardTopoStorage : public graphlearn::io::TopoStorage {
+class GrinTopoStorage : public graphlearn::io::TopoStorage {
 public:
-  explicit VineyardTopoStorage(
+  explicit GrinTopoStorage(
     GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
     const std::string& edge_type_name, const std::set<std::string>& attrs) {
     graph_ = new GrinGraphStorage(
       partitioned_graph, partition, edge_type_name, attrs);
   }
 
-  virtual ~VineyardTopoStorage() {
+  virtual ~GrinTopoStorage() {
     delete graph_;
   };
 
