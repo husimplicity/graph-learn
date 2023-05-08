@@ -50,6 +50,20 @@ using graphlearn::io::IndexArray;
 using graphlearn::io::NewDataHeldAttributeValue;
 using graphlearn::io::SideInfo;
 
+GraphStorage* NewGrinGraphStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
+                                  GRIN_PARTITION partition,
+                                  const std::string& edge_type_name,
+                                  const std::set<std::string>& attrs) {
+  return new GrinGraphStorage(
+    partitioned_graph, partition, edge_type_name, attrs);
+}
+
+GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype) {
+  return grin_select_type_for_vertex_list(
+    graph, vtype, grin_get_vertex_list(graph)
+  );
+}
+
 SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
                               const GRIN_PARTITION& partition,
                               const std::set<std::string>& attrs,
@@ -103,6 +117,8 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
       side_info->format |= kLabeled;
     } else if (field_name == "weight") {
       side_info->format |= kWeighted;
+    } else if (field_name == "timestamp") {
+      side_info->format |= kTimestamped;
     }
     side_info->format |= kAttributed;
   }
@@ -166,6 +182,8 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
       side_info->format |= kLabeled;
     } else if (field_name == "weight") {
       side_info->format |= kWeighted;
+    } else if (field_name == "timestamp") {
+      side_info->format |= kTimestamped;
     }
     side_info->format |= kAttributed;
   }

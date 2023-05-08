@@ -56,11 +56,10 @@ public:
 
     num_vertices_ = grin_get_vertex_num_by_type(graph_, src_type_);
     indptr_.resize(num_vertices_ + 1);
-    auto src_vertex_list = GetVertexListByType(src_type_);
+    auto src_vertex_list = GetVertexListByType(graph_, src_type_);
 
     for (size_t i = 0; i < num_vertices_; ++i) {
       auto v = grin_get_vertex_from_list(graph_, src_vertex_list, i);
-      // grin_vertex_list_.push_back(v);
       auto adj_list = grin_select_edge_type_for_adjacent_list(
         graph_, edge_type_,
         grin_get_adjacent_list(graph_, GRIN_DIRECTION::OUT, v)
@@ -69,7 +68,7 @@ public:
       auto it = grin_get_adjacent_list_begin(graph_, adj_list);
       while (grin_is_adjacent_list_end(graph_, it) == false) {
         auto e = grin_get_edge_from_adjacent_list_iter(graph_, it);
-        edge_list_.push_back(e);
+        edge_list_.emplace_back(e);
         grin_get_next_adjacent_list_iter(graph_, it);
       }
     }
@@ -100,17 +99,24 @@ public:
   }
 
   IdType GetSrcId(IdType edge_id) const override {
-    auto src_vertex_list = GetVertexListByType(src_type_);
+    auto src_vertex_list = GetVertexListByType(graph_, src_type_);
     auto src = grin_get_edge_src(graph_, edge_list_[edge_id]);
-    return grin_get_position_of_vertex_from_sorted_list(
+    
+    auto src_id = grin_get_position_of_vertex_from_sorted_list(
       graph_, src_vertex_list, src);
+    grin_destroy_vertex(graph_, src);
+    grin_destroy_vertex_list(graph_, src_vertex_list);
+    return src_id;
   }
 
   IdType GetDstId(IdType edge_id) const override {
-    auto dst_vertex_list = GetVertexListByType(dst_type_);
+    auto dst_vertex_list = GetVertexListByType(graph_, dst_type_);
     auto dst = grin_get_edge_dst(graph_, edge_list_[edge_id]);
-    return grin_get_position_of_vertex_from_sorted_list(
+    auto dst_id = grin_get_position_of_vertex_from_sorted_list(
       graph_, dst_vertex_list, dst);
+    grin_destroy_vertex(graph_, dst);
+    grin_destroy_vertex_list(graph_, dst_vertex_list);
+    return dst_id;
   }
 
   virtual IdType GetEdgeId(IdType edge_index) const override {
@@ -129,9 +135,10 @@ public:
       graph_, edge_type_, std::string("weight").c_str());
     auto edge_dtype = grin_get_edge_property_data_type(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
-    auto weight = grin_get_value_from_edge_property_table(
+    auto weight_val = grin_get_value_from_edge_property_table(
       graph_, edge_table, edge_list_[edge_id], edge_property);
     
+    float weight;
     switch (edge_dtype) {
     case GRIN_DATATYPE::Int32:
     case GRIN_DATATYPE::Int64:
@@ -139,11 +146,21 @@ public:
     case GRIN_DATATYPE::UInt64:
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
-      return *static_cast<const float*>(weight);
+      weight = *static_cast<const float*>(weight_val);
+      
     
     default:
-      return -1;
+      weight = -1;
     }
+    if (weight_val == NULL) {
+      grin_destroy_value(graph_, edge_dtype, weight_val);
+    }
+    
+    grin_destroy_edge_property(graph_, edge_property);
+    grin_destroy_edge_property_table(graph_, edge_table);
+    grin_destroy_edge_type(graph_, edge_type_);
+
+    return weight;
   }
 
   int32_t GetEdgeLabel(IdType edge_id) const override {
@@ -239,7 +256,7 @@ public:
     auto sz = indptr_[src_id + 1] - indptr_[src_id];
     std::vector<IdType> neighbors(sz);
     for (auto i = indptr_[src_id]; i < indptr_[src_id + 1]; ++i) {
-      neighbors.push_back(GetDstId(i));
+      neighbors.emplace_back(GetDstId(i));
     }
     return IdArray(neighbors);
   }
@@ -252,7 +269,7 @@ public:
   }
 
   virtual IndexType GetInDegree(IdType dst_id) const override {
-    auto dst_vertex_list = GetVertexListByType(dst_type_);
+    auto dst_vertex_list = GetVertexListByType(graph_, dst_type_);
     auto v = grin_get_vertex_from_list(graph_, dst_vertex_list, dst_id);
     auto in_list = grin_select_edge_type_for_adjacent_list(
         graph_, edge_type_,
@@ -266,7 +283,7 @@ public:
   }
 
   virtual const IndexArray GetAllInDegrees() const override {
-    auto dst_vertex_list = GetVertexListByType(dst_type_);
+    auto dst_vertex_list = GetVertexListByType(graph_, dst_type_);
     auto num_dst = grin_get_vertex_num_by_type(graph_, dst_type_);
     std::vector<IndexType> in_degrees(num_dst);
     for (size_t i = 0; i < num_dst; ++i) {
@@ -315,9 +332,9 @@ private:
   GRIN_PARTITIONED_GRAPH partitioned_graph_;
   GRIN_PARTITION partition_;
   GRIN_GRAPH graph_;
-  GRIN_EDGE_TYPE edge_type_; // optional
-  GRIN_VERTEX_TYPE src_type_; // optional
-  GRIN_VERTEX_TYPE dst_type_; // optional
+  GRIN_EDGE_TYPE edge_type_;
+  GRIN_VERTEX_TYPE src_type_;
+  GRIN_VERTEX_TYPE dst_type_;
   std::vector<IdType> indptr_;
   std::vector<GRIN_EDGE> edge_list_;
   size_t num_vertices_;
@@ -326,11 +343,6 @@ private:
 
   SideInfo *side_info_ = nullptr;
 
-  GRIN_VERTEX_LIST GetVertexListByType(GRIN_VERTEX_TYPE vtype) const {
-    return grin_select_type_for_vertex_list(
-      graph_, vtype, grin_get_vertex_list(graph_)
-    );
-  }
 };
 
 };
