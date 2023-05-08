@@ -44,9 +44,18 @@ public:
       auto v = grin_get_vertex_from_list(graph_, vl, i);
       vertex_list_.emplace_back(v);
     }
+    grin_destroy_vertex_list(graph_, vl);
   }
 
-  virtual ~GrinNodeStorage() = default;
+  virtual ~GrinNodeStorage() {
+    for (auto v : vertex_list_) {
+      grin_destroy_vertex(graph_, v);
+    }
+    grin_destroy_vertex_type(graph_, vertex_type_);
+    grin_destroy_graph(graph_);
+    grin_destroy_partitioned_graph(partitioned_graph_);
+    delete side_info_;
+  }
 
   virtual void Lock() override {}
   virtual void Unlock() override {}
@@ -94,11 +103,16 @@ public:
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       weight = *static_cast<const float*>(weight_val);
-      
     
     default:
       weight = -1;
     }
+
+    if (weight_val != NULL) {
+      grin_destroy_value(graph_, node_dtype, weight_val);
+    }
+    grin_destroy_vertex_property_table(graph_, node_table);
+    grin_destroy_vertex_property(graph_, node_property);
 
     return weight;
   }
@@ -124,11 +138,16 @@ public:
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       label = *static_cast<const int32_t*>(label_val);
-      
     
     default:
       label = -1;
     }
+
+    if (label_val != NULL) {
+      grin_destroy_value(graph_, node_dtype, label_val);
+    }
+    grin_destroy_vertex_property_table(graph_, node_table);
+    grin_destroy_vertex_property(graph_, node_property);
 
     return label;    
   }
@@ -154,13 +173,18 @@ public:
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       timestamp = *static_cast<const int64_t*>(timestamp_val);
-      
-    
+
     default:
       timestamp = -1;
     }
 
-    return timestamp;   
+    if (timestamp_val != NULL) {
+      grin_destroy_value(graph_, node_dtype, timestamp_val);
+    }
+    grin_destroy_vertex_property_table(graph_, node_table);
+    grin_destroy_vertex_property(graph_, node_property);
+
+    return timestamp;
   }
 
   virtual Attribute GetAttribute(IdType node_id) const override {
@@ -210,7 +234,14 @@ public:
       default:
         break;
       }
+
+      grin_destroy_value(graph_, dtype, value);
+      grin_destroy_vertex_property(graph_, property);
     }
+
+    grin_destroy_row(graph_, row);
+    grin_destroy_vertex_property_table(graph_, node_table);
+    grin_destroy_vertex_property_list(graph_, properties);
 
     return Attribute(attr, true);
   }

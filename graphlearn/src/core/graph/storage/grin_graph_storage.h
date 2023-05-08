@@ -60,10 +60,9 @@ public:
 
     for (size_t i = 0; i < num_vertices_; ++i) {
       auto v = grin_get_vertex_from_list(graph_, src_vertex_list, i);
+      auto adj_all = grin_get_adjacent_list(graph_, GRIN_DIRECTION::OUT, v);
       auto adj_list = grin_select_edge_type_for_adjacent_list(
-        graph_, edge_type_,
-        grin_get_adjacent_list(graph_, GRIN_DIRECTION::OUT, v)
-      );
+        graph_, edge_type_, adj_all);
       indptr_[i + 1] = grin_get_adjacent_list_size(graph_, adj_list) + indptr_[i];
       auto it = grin_get_adjacent_list_begin(graph_, adj_list);
       while (grin_is_adjacent_list_end(graph_, it) == false) {
@@ -71,17 +70,37 @@ public:
         edge_list_.emplace_back(e);
         grin_get_next_adjacent_list_iter(graph_, it);
       }
+      grin_destroy_adjacent_list_iter(graph_, it);
+      grin_destroy_adjacent_list(graph_, adj_list);
+      grin_destroy_adjacent_list(graph_, adj_all);
+      grin_destroy_vertex(graph_, v);
     }
 
+    auto src_type_name = grin_get_vertex_type_name(graph_, src_type_);
+    auto dst_type_name = grin_get_vertex_type_name(graph_, dst_type_);
     side_info_ = init_edge_side_info(
-      partitioned_graph_, partition_, attrs, edge_type_name,
-      grin_get_vertex_type_name(graph_, src_type_),
-      grin_get_vertex_type_name(graph_, dst_type_)
+      partitioned_graph_, partition_, attrs, 
+      edge_type_name, src_type_name, dst_type_name
     );
 
+    grin_destroy_vertex_list(graph_, src_vertex_list);
+    delete src_type_name;
+    delete dst_type_name;
   }
 
-  virtual ~GrinGraphStorage() = default;
+  virtual ~GrinGraphStorage() {
+    delete side_info_;
+
+    for (auto e : edge_list_) {
+      grin_destroy_edge(graph_, e);
+    }
+    grin_destroy_edge_type(graph_, edge_type_);
+    grin_destroy_vertex_type(graph_, src_type_);
+    grin_destroy_vertex_type(graph_, dst_type_);
+    grin_destroy_graph(graph_);
+    grin_destroy_partition(partitioned_graph_, partition_);
+    grin_destroy_partitioned_graph(partitioned_graph_);
+  }
 
   virtual void Lock() override {}
   virtual void Unlock() override {}
@@ -133,6 +152,10 @@ public:
 
     auto edge_property = grin_get_edge_property_by_name(
       graph_, edge_type_, std::string("weight").c_str());
+    if (edge_property == GRIN_NULL_EDGE_PROPERTY) {
+      return -1;
+    }
+
     auto edge_dtype = grin_get_edge_property_data_type(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
     auto weight_val = grin_get_value_from_edge_property_table(
@@ -147,18 +170,16 @@ public:
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       weight = *static_cast<const float*>(weight_val);
-      
-    
+
     default:
       weight = -1;
     }
-    if (weight_val == NULL) {
+
+    if (weight_val != NULL) {
       grin_destroy_value(graph_, edge_dtype, weight_val);
     }
-    
-    grin_destroy_edge_property(graph_, edge_property);
     grin_destroy_edge_property_table(graph_, edge_table);
-    grin_destroy_edge_type(graph_, edge_type_);
+    grin_destroy_edge_property(graph_, edge_property);
 
     return weight;
   }
@@ -170,21 +191,34 @@ public:
 
     auto edge_property = grin_get_edge_property_by_name(
       graph_, edge_type_, std::string("label").c_str());
+    if (edge_property == GRIN_NULL_EDGE_PROPERTY) {
+      return -1;
+    }
+
     auto edge_dtype = grin_get_edge_property_data_type(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
-    auto label = grin_get_value_from_edge_property_table(
+    auto label_val = grin_get_value_from_edge_property_table(
       graph_, edge_table, edge_list_[edge_id], edge_property);
-    
+
+    int32_t label;
     switch (edge_dtype) {
     case GRIN_DATATYPE::Int32:
     case GRIN_DATATYPE::Int64:
     case GRIN_DATATYPE::UInt32:
     case GRIN_DATATYPE::UInt64:
-      return *static_cast<const int32_t*>(label);
+      label = *static_cast<const int32_t*>(label_val);
     
     default:
-      return -1;
+      label = -1;
     }
+
+    if (label_val != NULL) {
+      grin_destroy_value(graph_, edge_dtype, label_val);
+    }
+    grin_destroy_edge_property_table(graph_, edge_table);
+    grin_destroy_edge_property(graph_, edge_property);
+
+    return label;
   }
 
   virtual int64_t GetEdgeTimestamp(IdType edge_id) const override {
@@ -194,11 +228,37 @@ public:
 
     auto edge_property = grin_get_edge_property_by_name(
       graph_, edge_type_, std::string("timestamp").c_str());
+    if (edge_property == GRIN_NULL_EDGE_PROPERTY) {
+      return -1;
+    }
+
     auto edge_dtype = grin_get_edge_property_data_type(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
-    auto timestamp = grin_get_value_from_edge_property_table(
+    auto timestamp_val = grin_get_value_from_edge_property_table(
       graph_, edge_table, edge_list_[edge_id], edge_property);
-    return *static_cast<const int64_t*>(timestamp);
+    
+    int64_t timestamp;
+    switch (edge_dtype) {
+    case GRIN_DATATYPE::Int32:
+    case GRIN_DATATYPE::Int64:
+    case GRIN_DATATYPE::UInt32:
+    case GRIN_DATATYPE::UInt64:
+    case GRIN_DATATYPE::Float:
+    case GRIN_DATATYPE::Double:
+      timestamp = *static_cast<const int64_t*>(timestamp_val);
+      
+    
+    default:
+      timestamp = -1;
+    }
+
+    if (timestamp_val != NULL) {
+      grin_destroy_value(graph_, edge_dtype, timestamp_val);
+    }
+    grin_destroy_edge_property_table(graph_, edge_table);
+    grin_destroy_edge_property(graph_, edge_property);
+
+    return timestamp;
   }
 
   virtual Attribute GetEdgeAttribute(IdType edge_id) const override {
@@ -211,8 +271,7 @@ public:
 
     auto attr = NewDataHeldAttributeValue();
 
-    GRIN_EDGE_PROPERTY_LIST properties = grin_get_edge_property_list_by_type(
-      graph_, edge_type_);
+    auto properties = grin_get_edge_property_list_by_type(graph_, edge_type_);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
     GRIN_ROW row = grin_get_row_from_edge_property_table(
       graph_, edge_table, edge_list_[edge_id], properties);
@@ -247,7 +306,14 @@ public:
       default:
         break;
       }
+
+      grin_destroy_value(graph_, dtype, value);
+      grin_destroy_edge_property(graph_, property);
     }
+
+    grin_destroy_row(graph_, row);
+    grin_destroy_edge_property_table(graph_, edge_table);
+    grin_destroy_edge_property_list(graph_, properties);
 
     return Attribute(attr, true);
   }
@@ -271,11 +337,16 @@ public:
   virtual IndexType GetInDegree(IdType dst_id) const override {
     auto dst_vertex_list = GetVertexListByType(graph_, dst_type_);
     auto v = grin_get_vertex_from_list(graph_, dst_vertex_list, dst_id);
+    auto adj_in = grin_get_adjacent_list(graph_, GRIN_DIRECTION::IN, v);
     auto in_list = grin_select_edge_type_for_adjacent_list(
-        graph_, edge_type_,
-        grin_get_adjacent_list(graph_, GRIN_DIRECTION::IN, v)
-      );
-    return grin_get_adjacent_list_size(graph_, in_list);
+      graph_, edge_type_, adj_in);
+    size_t deg = grin_get_adjacent_list_size(graph_, in_list);
+    grin_destroy_adjacent_list(graph_, in_list);
+    grin_destroy_adjacent_list(graph_, adj_in);
+    grin_destroy_vertex(graph_, v);
+    grin_destroy_vertex_list(graph_, dst_vertex_list);
+
+    return deg;
   }
 
   virtual IndexType GetOutDegree(IdType src_id) const override {
@@ -288,12 +359,16 @@ public:
     std::vector<IndexType> in_degrees(num_dst);
     for (size_t i = 0; i < num_dst; ++i) {
       auto v = grin_get_vertex_from_list(graph_, dst_vertex_list, i);
+      auto adj_in = grin_get_adjacent_list(graph_, GRIN_DIRECTION::IN, v);
       auto in_list = grin_select_edge_type_for_adjacent_list(
-        graph_, edge_type_,
-        grin_get_adjacent_list(graph_, GRIN_DIRECTION::IN, v)
-      );
+        graph_, edge_type_, adj_in);
       in_degrees[i] = grin_get_adjacent_list_size(graph_, in_list);
+      grin_destroy_adjacent_list(graph_, in_list);
+      grin_destroy_adjacent_list(graph_, adj_in);
+      grin_destroy_vertex(graph_, v);
     }
+    grin_destroy_vertex_list(graph_, dst_vertex_list);
+
     return IndexArray(in_degrees);
   }
 

@@ -59,9 +59,10 @@ GraphStorage* NewGrinGraphStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
 }
 
 GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype) {
-  return grin_select_type_for_vertex_list(
-    graph, vtype, grin_get_vertex_list(graph)
-  );
+  auto vl_all = grin_get_vertex_list(graph);
+  auto vl = grin_select_type_for_vertex_list(graph, vtype, vl_all);
+  grin_destroy_vertex_list(graph, vl_all);
+  return vl;
 }
 
 SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
@@ -121,12 +122,19 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
       side_info->format |= kTimestamped;
     }
     side_info->format |= kAttributed;
+
+    grin_destroy_edge_property(graph, field);
   }
   side_info->type = edge_type_name;
   side_info->src_type = src_type_name;
   side_info->dst_type = dst_type_name;
 
   side_info_cache[pid][edge_type_name] = side_info;
+
+  grin_destroy_edge_property_list(graph, fields);
+  grin_destroy_edge_property_table(graph, edge_table);
+  grin_destroy_edge_type(graph, edge_type);
+  grin_destroy_graph(graph);
   return side_info.get();
 }
 
@@ -186,10 +194,17 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
       side_info->format |= kTimestamped;
     }
     side_info->format |= kAttributed;
-  }
-  side_info->type = node_type_name;
 
+    grin_destroy_vertex_property(graph, field);
+  }
+
+  side_info->type = node_type_name;
   side_info_cache[pid][node_type_name] = side_info;
+
+  grin_destroy_vertex_property_list(graph, fields);
+  grin_destroy_vertex_property_table(graph, vertex_table);
+  grin_destroy_vertex_type(graph, node_type);
+  grin_destroy_graph(graph);
   return side_info.get();
 }
 
