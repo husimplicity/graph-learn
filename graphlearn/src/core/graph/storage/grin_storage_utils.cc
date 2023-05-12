@@ -18,7 +18,6 @@ limitations under the License.
 
 
 #include "core/graph/storage/grin_edge_storage.h"
-#include "core/graph/storage/grin_graph_storage.h"
 #include "core/graph/storage/grin_node_storage.h"
 #include "core/graph/storage/grin_topo_storage.h"
 

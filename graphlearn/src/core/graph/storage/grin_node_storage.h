@@ -20,6 +20,10 @@ limitations under the License.
 #include <vector>
 #include "core/graph/storage/types.h"
 
+#include "core/graph/storage/node_storage.h"
+#include "core/graph/storage/grin_storage_utils.h"
+#include "include/config.h"
+
 namespace graphlearn {
 namespace io {
 
@@ -302,11 +306,12 @@ public:
       return nullptr;
     }
 
-    std::vector<Attribute> attributes(Size());
-    std::generate(attributes.begin(), attributes.end(), [this, i = 0] () mutable {
-      return GetAttribute(i++);
-    });
-    return new std::vector<Attribute>(attributes);
+    auto attributes = new std::vector<Attribute>();
+    attributes->reserve(Size());
+    for (int32_t i = 0; i < Size(); ++i) {
+      attributes->emplace_back(GetAttribute(i));
+    }
+    return attributes;
   }
 
 private:

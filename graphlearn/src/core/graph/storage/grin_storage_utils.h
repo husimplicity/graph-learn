@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
-#define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
+// #ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
+// #define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
 
 
 #include "core/graph/storage/edge_storage.h"
@@ -40,6 +40,11 @@ using graphlearn::io::IndexArray;
 using graphlearn::io::NewDataHeldAttributeValue;
 using graphlearn::io::SideInfo;
 
+// GraphStorage* NewGrinGraphStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
+//                                   GRIN_PARTITION partition,
+//                                   const std::string& edge_type_name,
+//                                   const std::set<std::string>& attrs);
+
 GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype);
 
 SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
@@ -59,4 +64,5 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
 
 }
 
-#endif // GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
+// #endif // GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
+// #endif

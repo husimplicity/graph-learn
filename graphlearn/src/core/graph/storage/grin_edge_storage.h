@@ -28,8 +28,10 @@ limitations under the License.
 #include "vineyard/graph/grin/include/property/type.h"
 #include "vineyard/graph/grin/include/partition/partition.h"
 
-#include "core/graph/storage/graph_storage.h"
+#include "core/graph/storage/edge_storage.h"
+#include "core/graph/storage/grin_graph_storage.h"
 #include "core/graph/storage/grin_storage_utils.h"
+#include "include/config.h"
 
 namespace graphlearn {
 
@@ -147,11 +149,13 @@ public:
     if (!graph_->side_info_->IsAttributed()) {
       return nullptr;
     }
-    auto attrs = new std::vector<Attribute>(Size());
-    std::generate(attrs->begin(), attrs->end(), [this, i = 0] () mutable {
-      return GetAttribute(i++);
-    });
-    return attrs;
+    auto attributes = new std::vector<Attribute>();
+    attributes->reserve(Size());
+    for (int32_t i = 0; i < Size(); ++i) {
+      attributes->emplace_back(GetAttribute(i));
+    }
+
+    return attributes;
   }
 
 private:

@@ -34,10 +34,12 @@ limitations under the License.
 
 #include "core/graph/storage/graph_storage.h"
 #include "core/graph/storage/grin_storage_utils.h"
+#include "include/config.h"
 
 namespace graphlearn {
 
 namespace io {
+
 
 class GrinGraphStorage : public GraphStorage {
 public:
