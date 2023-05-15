@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
-#define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
+#ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_EDGE_STORAGE_H_
+#define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_EDGE_STORAGE_H_
 
 #include <memory>
 

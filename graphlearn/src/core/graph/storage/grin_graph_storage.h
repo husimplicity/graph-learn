@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-// #ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
-// #define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
+#ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
+#define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
 
 #include <memory>
 #include <numeric>
@@ -27,7 +27,6 @@ limitations under the License.
 #include "vineyard/graph/grin/include/property/topology.h"
 #include "vineyard/graph/grin/include/index/order.h"
 #include "vineyard/graph/grin/include/property/type.h"
-#include "vineyard/graph/grin/include/partition/partition.h"
 #include "vineyard/graph/grin/include/property/propertytable.h"
 #include "vineyard/graph/grin/include/property/property.h"
 #include "vineyard/graph/grin/include/property/propertylist.h"
@@ -40,6 +39,7 @@ namespace graphlearn {
 
 namespace io {
 
+class GrinEdgeStorage;
 
 class GrinGraphStorage : public GraphStorage {
 public:
@@ -426,4 +426,4 @@ private:
 
 }
 
-// #endif // GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
+#endif // GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_

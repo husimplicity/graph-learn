@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-// #ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
-// #define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
+#ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
+#define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
 
 
 #include "core/graph/storage/edge_storage.h"
@@ -64,5 +64,5 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
 
 }
 
-// #endif // GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
+#endif // GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_STORAGE_UTILS_H_
 // #endif

@@ -39,10 +39,10 @@ int main(int argc, char **argv) {
 
   {
 
-  auto pg = grin_get_partitioned_graph_from_storage(2, ipc_socket, obj_id);
+  auto pg = grin_get_partitioned_graph_from_storage(2, argv);
   GRIN_PARTITION_LIST local_partitions = grin_get_local_partition_list(pg);
   auto partition = grin_get_partition_from_list(pg, local_partitions, 0);
-  GRIN_GRAPH g = grin_get_local_graph_by_partition(pg, partition);
+  GRIN_GRAPH g = grin_get_local_graph_from_partition(pg, partition);
 
   }
 
