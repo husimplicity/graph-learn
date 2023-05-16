@@ -25,10 +25,8 @@ limitations under the License.
 #include "core/graph/storage/node_storage.h"
 #include "core/graph/storage/topo_storage.h"
 
-#include "vineyard/graph/grin/include/property/propertytable.h"
-#include "vineyard/graph/grin/include/property/property.h"
-#include "vineyard/graph/grin/include/property/propertylist.h"
-#include "vineyard/graph/grin/include/property/topology.h"
+
+
 #include "include/config.h"
 
 namespace graphlearn {

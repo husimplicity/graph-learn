@@ -51,6 +51,10 @@ option (WITH_HIACTOR
   "Enable hiactor engine"
   OFF)
 
+option (WITH_GRIN
+  "Enable grin apis"
+  OFF)
+
 set (GL_CXX_DIALECT
   "c++11"
   CACHE
@@ -436,11 +440,16 @@ if (KNN)
 endif ()
 
 if (WITH_VINEYARD)
-  message(${VINEYARD_INCLUDE_DIRS})
-  message(${VINEYARD_LIBRARIES})
-  target_include_directories (graphlearn_shared PUBLIC ${VINEYARD_INCLUDE_DIRS} /opt/graphscope/include/vineyard/graph)
-  target_link_libraries (graphlearn_shared PUBLIC ${VINEYARD_LIBRARIES} vineyard_grin)
+  target_include_directories (graphlearn_shared PUBLIC ${VINEYARD_INCLUDE_DIRS})
+  target_link_libraries (graphlearn_shared PRIVATE ${VINEYARD_LIBRARIES})
+  # target_include_directories (graphlearn_shared PUBLIC ${VINEYARD_INCLUDE_DIRS} /opt/graphscope/include/vineyard/graph)
+  # target_link_libraries (graphlearn_shared PRIVATE ${VINEYARD_LIBRARIES} vineyard_grin)
 endif ()
+
+if (WITH_GRIN)
+  target_include_directories (graphlearn_shared PUBLIC ${VINEYARD_INCLUDE_DIRS} /opt/graphscope/include/vineyard/graph)
+  target_link_libraries (graphlearn_shared PRIVATE ${VINEYARD_LIBRARIES} vineyard_grin)
+endif()
 
 if (GPU)
   set (CUDA_PATH /usr/local/cuda-10.0)
@@ -489,7 +498,6 @@ if (TESTING)
       target_link_libraries (${TEST_NAME}
         PUBLIC
           graphlearn_shared
-          vineyard_grin
           GTest::gtest
           GTest::gtest_main)
       add_dependencies (gl_tests ${TEST_NAME})
@@ -524,7 +532,8 @@ if (TESTING)
   if (WITH_VINEYARD AND TARGET vineyard_storage_unittest)
     target_compile_options(vineyard_storage_unittest PRIVATE "-std=${GL_CXX_DIALECT}")
   endif ()
-  if (WITH_VINEYARD AND TARGET grin_storage_unittest)    
+  if (WITH_GRIN AND TARGET grin_storage_unittest)
+    target_link_libraries (grin_storage_unittest PRIVATE vineyard_grin vineyard_graph vineyard_basic)    
     target_compile_options(grin_storage_unittest PRIVATE "-std=${GL_CXX_DIALECT}" /opt/graphscope/include/vineyard/graph)
   endif ()
 endif()

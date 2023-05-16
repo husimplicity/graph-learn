@@ -20,6 +20,13 @@ limitations under the License.
 #include <vector>
 #include "core/graph/storage/types.h"
 
+extern "C" {
+
+#include "vineyard/graph/grin/include/topology/adjacentlist.h"
+#include "vineyard/graph/grin/include/partition/partition.h"
+}
+#include "vineyard/graph/grin/src/predefine.h"
+
 #include "core/graph/storage/node_storage.h"
 #include "core/graph/storage/grin_storage_utils.h"
 #include "include/config.h"

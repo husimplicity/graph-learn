@@ -10,6 +10,11 @@
 #include "core/graph/graph_store.h"
 
 
+extern "C" {
+#include "vineyard/graph/grin/include/partition/partition.h"
+}
+#include "vineyard/graph/grin/src/predefine.h"
+
 #include "core/graph/storage/grin_edge_storage.h"
 #include "core/graph/storage/grin_graph_storage.h"
 #include "core/graph/storage/grin_node_storage.h"
@@ -25,7 +30,7 @@ int main(int argc, char **argv) {
 #else
   return 0;
 #endif
-  
+
   int index = 1;
   std::string ipc_socket = std::string(argv[index++]);
   std::string obj_id = std::string(argv[index++]);
@@ -43,6 +48,7 @@ int main(int argc, char **argv) {
   GRIN_PARTITION_LIST local_partitions = grin_get_local_partition_list(pg);
   auto partition = grin_get_partition_from_list(pg, local_partitions, 0);
   GRIN_GRAPH g = grin_get_local_graph_from_partition(pg, partition);
+  
 
   }
 
