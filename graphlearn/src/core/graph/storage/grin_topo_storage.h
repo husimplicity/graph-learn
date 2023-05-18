@@ -40,7 +40,7 @@ class GrinTopoStorage : public graphlearn::io::TopoStorage {
 public:
   explicit GrinTopoStorage(
     GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs) {
+    const std::string& edge_type_name, const std::set<std::string>& attrs=std::set<std::string>()) {
     graph_ = new GrinGraphStorage(
       partitioned_graph, partition, edge_type_name, attrs);
   }
@@ -74,6 +74,9 @@ public:
     return graph_->GetOutDegree(src_id);
   }
 
+  virtual IdType GetEdgeId(IdType edge_index) const {
+    return edge_index;
+  }
   /// Get all the distinct ids that appear as the source id of an edge.
   /// For example, 6 edges like
   /// [1 2]

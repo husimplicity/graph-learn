@@ -440,10 +440,10 @@ if (KNN)
 endif ()
 
 if (WITH_VINEYARD)
-  target_include_directories (graphlearn_shared PUBLIC ${VINEYARD_INCLUDE_DIRS})
-  target_link_libraries (graphlearn_shared PRIVATE ${VINEYARD_LIBRARIES})
-  # target_include_directories (graphlearn_shared PUBLIC ${VINEYARD_INCLUDE_DIRS} /opt/graphscope/include/vineyard/graph)
-  # target_link_libraries (graphlearn_shared PRIVATE ${VINEYARD_LIBRARIES} vineyard_grin)
+  # target_include_directories (graphlearn_shared PUBLIC ${VINEYARD_INCLUDE_DIRS})
+  # target_link_libraries (graphlearn_shared PRIVATE ${VINEYARD_LIBRARIES})
+  target_include_directories (graphlearn_shared PUBLIC ${VINEYARD_INCLUDE_DIRS} /opt/graphscope/include/vineyard/graph)
+  target_link_libraries (graphlearn_shared PRIVATE ${VINEYARD_LIBRARIES} vineyard_grin)
 endif ()
 
 if (WITH_GRIN)
@@ -498,6 +498,7 @@ if (TESTING)
       target_link_libraries (${TEST_NAME}
         PUBLIC
           graphlearn_shared
+          vineyard_grin vineyard_graph vineyard_basic
           GTest::gtest
           GTest::gtest_main)
       add_dependencies (gl_tests ${TEST_NAME})
@@ -513,8 +514,8 @@ if (TESTING)
   list (FILTER GL_TEST_FILES EXCLUDE REGEX ".*/thread_unittest\\.cpp$")
   list (FILTER GL_TEST_FILES EXCLUDE REGEX ".*/thread_dag_scheduler_unittest\\.cpp$") # unknown and unreproduceable coredump
   list (FILTER GL_TEST_FILES EXCLUDE REGEX ".*/waitable_event_unittest\\.cpp$")
-  list (FILTER GL_TEST_FILES EXCLUDE REGEX ".*/vineyard_storage_unittest\\.cpp$")
-  list (FILTER GL_TEST_FILES EXCLUDE REGEX ".*/grin_storage_unittest\\.cpp$")
+  # list (FILTER GL_TEST_FILES EXCLUDE REGEX ".*/vineyard_storage_unittest\\.cpp$")
+  # list (FILTER GL_TEST_FILES EXCLUDE REGEX ".*/grin_storage_unittest\\.cpp$")
   add_gl_tests (${GL_TEST_FILES})
 
   if (KNN)
@@ -533,9 +534,10 @@ if (TESTING)
     target_compile_options(vineyard_storage_unittest PRIVATE "-std=${GL_CXX_DIALECT}")
   endif ()
   if (WITH_GRIN AND TARGET grin_storage_unittest)
-    target_link_libraries (grin_storage_unittest PRIVATE vineyard_grin vineyard_graph vineyard_basic)    
+    # target_include_directories (grin_storage_unittest PRIVATE /opt/graphscope/include/vineyard/graph)
+    # target_link_libraries (grin_storage_unittest PRIVATE vineyard_grin vineyard_graph vineyard_basic)    
     target_compile_options(grin_storage_unittest PRIVATE "-std=${GL_CXX_DIALECT}" /opt/graphscope/include/vineyard/graph)
-  endif ()
+  endif()
 endif()
 
 # python

@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
 #define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_GRAPH_STORAGE_H_
 
+#include <iostream>
 #include <memory>
 #include <numeric>
 
@@ -49,7 +50,7 @@ class GrinGraphStorage : public GraphStorage {
 public:
   explicit GrinGraphStorage(
     GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs):
+    const std::string& edge_type_name, const std::set<std::string>& attrs=std::set<std::string>()):
       partitioned_graph_(partitioned_graph),
       partition_(partition),
       attrs_(attrs) {
@@ -84,10 +85,11 @@ public:
 
     auto src_type_name = grin_get_vertex_type_name(graph_, src_type_);
     auto dst_type_name = grin_get_vertex_type_name(graph_, dst_type_);
-    side_info_ = init_edge_side_info(
-      partitioned_graph_, partition_, attrs, 
-      edge_type_name, src_type_name, dst_type_name
-    );
+    if (!attrs.empty()) {
+      side_info_ = init_edge_side_info(
+        partitioned_graph_, partition_, attrs, 
+        edge_type_name, src_type_name, dst_type_name);
+    }
 
     grin_destroy_vertex_list(graph_, src_vertex_list);
     delete src_type_name;
@@ -104,8 +106,6 @@ public:
     grin_destroy_vertex_type(graph_, src_type_);
     grin_destroy_vertex_type(graph_, dst_type_);
     grin_destroy_graph(graph_);
-    grin_destroy_partition(partitioned_graph_, partition_);
-    grin_destroy_partitioned_graph(partitioned_graph_);
   }
 
   virtual void Lock() override {}
@@ -173,12 +173,18 @@ public:
     case GRIN_DATATYPE::Int64:
     case GRIN_DATATYPE::UInt32:
     case GRIN_DATATYPE::UInt64:
+      weight = *static_cast<const int64_t*>(weight_val);
+      break;
     case GRIN_DATATYPE::Float:
-    case GRIN_DATATYPE::Double:
       weight = *static_cast<const float*>(weight_val);
+      break;
+    case GRIN_DATATYPE::Double:
+      weight = *static_cast<const double*>(weight_val);
+      break;
 
     default:
       weight = -1;
+      break;
     }
 
     if (weight_val != NULL) {
@@ -213,9 +219,11 @@ public:
     case GRIN_DATATYPE::UInt32:
     case GRIN_DATATYPE::UInt64:
       label = *static_cast<const int32_t*>(label_val);
+      break;
     
     default:
       label = -1;
+      break;
     }
 
     if (label_val != NULL) {
@@ -252,10 +260,11 @@ public:
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       timestamp = *static_cast<const int64_t*>(timestamp_val);
-      
+      break;
     
     default:
       timestamp = -1;
+      break;
     }
 
     if (timestamp_val != NULL) {
@@ -297,9 +306,15 @@ public:
         }
         break;
       case GRIN_DATATYPE::Float:
+        if (side_info_->f_num > 0) {
+          float v = *static_cast<const float*>(value);
+          attr->Add(v);
+        }
+        break;
       case GRIN_DATATYPE::Double:
         if (side_info_->f_num > 0) {
-          attr->Add(*static_cast<const float*>(value));
+          float v = *static_cast<const double*>(value);
+          attr->Add(v);
         }
         break;
       
@@ -326,18 +341,22 @@ public:
 
   virtual Array<IdType> GetNeighbors(IdType src_id) const override {
     auto sz = indptr_[src_id + 1] - indptr_[src_id];
-    std::vector<IdType> neighbors(sz);
-    for (auto i = indptr_[src_id]; i < indptr_[src_id + 1]; ++i) {
-      neighbors.emplace_back(GetDstId(i));
+    std::shared_ptr<IdType> neighbors(new IdType[sz], std::default_delete<IdType[]>());
+    IdType* nbr_ptr = neighbors.get();
+
+    for (auto i = 0; i < sz; ++i) {
+      nbr_ptr[i] = GetDstId(i + indptr_[src_id]);
     }
-    return IdArray(neighbors);
+
+    return IdArray(neighbors.get(), sz, neighbors);
   }
 
   virtual Array<IdType> GetOutEdges(IdType src_id) const override {
     auto sz = indptr_[src_id + 1] - indptr_[src_id];
-    std::vector<IdType> out_edges(sz);
-    std::iota(out_edges.begin(), out_edges.end(), indptr_[src_id]);
-    return IdArray(out_edges);
+    std::shared_ptr<IdType> out_edges(new IdType[sz], std::default_delete<IdType[]>());
+    IdType* oes_ptr = out_edges.get();
+    std::iota(oes_ptr, oes_ptr + sz, indptr_[src_id]);
+    return IdArray(oes_ptr, sz, out_edges);
   }
 
   virtual IndexType GetInDegree(IdType dst_id) const override {
@@ -362,49 +381,56 @@ public:
   virtual const IndexArray GetAllInDegrees() const override {
     auto dst_vertex_list = GetVertexListByType(graph_, dst_type_);
     auto num_dst = grin_get_vertex_num_by_type(graph_, dst_type_);
-    std::vector<IndexType> in_degrees(num_dst);
+    std::shared_ptr<IndexType> in_degrees(new IndexType[num_dst], 
+                                          std::default_delete<IndexType[]>());
+    IndexType* in_degrees_ptr = in_degrees.get();
     for (size_t i = 0; i < num_dst; ++i) {
       auto v = grin_get_vertex_from_list(graph_, dst_vertex_list, i);
       auto adj_in = grin_get_adjacent_list(graph_, GRIN_DIRECTION::IN, v);
       auto in_list = grin_select_edge_type_for_adjacent_list(
         graph_, edge_type_, adj_in);
-      in_degrees[i] = grin_get_adjacent_list_size(graph_, in_list);
+      in_degrees_ptr[i] = grin_get_adjacent_list_size(graph_, in_list);
       grin_destroy_adjacent_list(graph_, in_list);
       grin_destroy_adjacent_list(graph_, adj_in);
       grin_destroy_vertex(graph_, v);
     }
     grin_destroy_vertex_list(graph_, dst_vertex_list);
 
-    return IndexArray(in_degrees);
+    return IndexArray(in_degrees.get(), num_dst, in_degrees);
   }
 
   virtual const IndexArray GetAllOutDegrees() const override {
     if (indptr_.size() <= 1)
       return IndexArray();
 
-    std::vector<IndexType> out_degrees(indptr_.size());
-    std::adjacent_difference(indptr_.begin(), indptr_.end(), out_degrees.begin());
-    return IndexArray(
-      std::vector<IndexType>(out_degrees.begin() + 1, out_degrees.end()));
+    std::shared_ptr<IndexType> out_degrees(new IndexType[indptr_.size()],
+                                           std::default_delete<IndexType[]>());
+    IndexType* out_degrees_ptr = out_degrees.get();
+    std::adjacent_difference(indptr_.begin(), indptr_.end(), out_degrees_ptr);
+    return IndexArray(out_degrees.get() + 1, indptr_.size() - 1, out_degrees);
   }
 
   virtual const IdArray GetAllSrcIds() const override {
-    std::vector<IdType> srcs(indptr_.back());
+    std::shared_ptr<IdType> srcs(new IdType[indptr_.back()], 
+                                 std::default_delete<IdType[]>());
+    IdType* srcs_ptr = srcs.get();
     for (IdType i = 0; i < indptr_.size() - 1; ++i) {
-      std::fill(srcs.begin() + indptr_[i], srcs.begin() + indptr_[i+1], i);
+      std::fill(srcs_ptr + indptr_[i], srcs_ptr + indptr_[i + 1], i);
     }
 
-    return IdArray(srcs);
+    return IdArray(srcs.get(), indptr_.back(), srcs);
   }
 
   virtual const IdArray GetAllDstIds() const override {
     auto num_dst = GetEdgeCount();
-    std::vector<IdType> dst_ids(num_dst);
+    std::shared_ptr<IdType> dst_ids(new IdType[num_dst], 
+                                    std::default_delete<IdType[]>());
+    IdType* dst_ids_ptr = dst_ids.get();
     for (IdType i = 0; i < num_dst; ++i) {
-      dst_ids[i] = GetDstId(i);
+      dst_ids_ptr[i] = GetDstId(i);
     }
 
-    return IdArray(dst_ids);
+    return IdArray(dst_ids.get(), num_dst, dst_ids);
   }
 
 private:

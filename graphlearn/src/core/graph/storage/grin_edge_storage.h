@@ -44,7 +44,7 @@ class GrinEdgeStorage : public EdgeStorage {
 public:
   explicit GrinEdgeStorage(
     GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs) {
+    const std::string& edge_type_name, const std::set<std::string>& attrs=std::set<std::string>()) {
       graph_ = new GrinGraphStorage(
         partitioned_graph, partition, edge_type_name, attrs);
   }
@@ -112,43 +112,49 @@ public:
     return graph_->GetAllDstIds();
   }
   /// Get all weights if existed, the count of which is the same with Size().
-  virtual const Array<float> GetWeights() {
+  virtual const Array<float> GetWeights() const {
     if (!graph_->side_info_->IsWeighted()) {
       return Array<float>();
     }
 
-    std::vector<float> weights(Size());
-    std::generate(weights.begin(), weights.end(), [this, i = 0] () mutable {
+    std::shared_ptr<float> weights(new float[Size()],
+                                   std::default_delete<float[]>());
+    auto weights_ptr = weights.get();
+    std::generate(weights_ptr, weights_ptr + Size(), [this, i = 0] () mutable {
       return GetWeight(i++);
     });
-    return Array<float>(weights);
+    return Array<float>(weights_ptr, Size(), weights);
   }
   /// Get all labels if existed, the count of which is the same with Size().
-  virtual const Array<int32_t> GetLabels() {
+  virtual const Array<int32_t> GetLabels() const {
     if (!graph_->side_info_->IsLabeled()) {
       return Array<int32_t>();
     }
 
-    std::vector<int32_t> labels(Size());
-    std::generate(labels.begin(), labels.end(), [this, i = 0] () mutable {
+    std::shared_ptr<int32_t> labels(new int32_t[Size()],
+                                    std::default_delete<int32_t[]>());
+    auto labels_ptr = labels.get();
+    std::generate(labels_ptr, labels_ptr + Size(), [this, i = 0] () mutable {
       return GetLabel(i++);
     });
-    return Array<int32_t>(labels);
+    return Array<int32_t>(labels_ptr, Size(), labels);
   }
   /// Get all timestamps if existed, the count of which is the same with Size().
-  virtual const Array<int64_t> GetTimestamps() {
+  virtual const Array<int64_t> GetTimestamps() const {
     if (!graph_->side_info_->IsTimestamped()) {
       return Array<int64_t>();
     }
 
-    std::vector<int64_t> timestamps(Size());
-    std::generate(timestamps.begin(), timestamps.end(), [this, i = 0] () mutable {
+    std::shared_ptr<int64_t> timestamps(new int64_t[Size()],
+                                        std::default_delete<int64_t[]>());
+    auto timestamps_ptr = timestamps.get();
+    std::generate(timestamps_ptr, timestamps_ptr + Size(), [this, i = 0] () mutable {
       return GetTimestamp(i++);
     });
-    return Array<int64_t>(timestamps);
+    return Array<int64_t>(timestamps_ptr, Size(), timestamps);
   }
   /// Get all attributes if existed, the count of which is the same with Size().
-  virtual const std::vector<Attribute>* GetAttributes() {
+  virtual const std::vector<Attribute>* GetAttributes() const {
     if (!graph_->side_info_->IsAttributed()) {
       return nullptr;
     }

@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_NODE_STORAGE_H_
 #define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_NODE_STORAGE_H_
 
+#include <iostream>
 #include <cstdint>
 #include <vector>
 #include "core/graph/storage/types.h"
@@ -39,7 +40,7 @@ public:
   explicit GrinNodeStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
                            GRIN_PARTITION partition,
                            const std::string& node_type_name,
-                           const std::set<std::string>& attrs):
+                           const std::set<std::string>& attrs=std::set<std::string>()):
       partitioned_graph_(partitioned_graph),
       partition_(partition),
       attrs_(attrs) {
@@ -64,8 +65,6 @@ public:
     }
     grin_destroy_vertex_type(graph_, vertex_type_);
     grin_destroy_graph(graph_);
-    grin_destroy_partitioned_graph(partitioned_graph_);
-    delete side_info_;
   }
 
   virtual void Lock() override {}
@@ -112,11 +111,15 @@ public:
     case GRIN_DATATYPE::UInt32:
     case GRIN_DATATYPE::UInt64:
     case GRIN_DATATYPE::Float:
+      weight = *static_cast<const double*>(weight_val);
+      break;
     case GRIN_DATATYPE::Double:
       weight = *static_cast<const float*>(weight_val);
+      break;
     
     default:
       weight = -1;
+      break;
     }
 
     if (weight_val != NULL) {
@@ -149,9 +152,11 @@ public:
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       label = *static_cast<const int32_t*>(label_val);
+      break;
     
     default:
       label = -1;
+      break;
     }
 
     if (label_val != NULL) {
@@ -159,7 +164,6 @@ public:
     }
     grin_destroy_vertex_property_table(graph_, node_table);
     grin_destroy_vertex_property(graph_, node_property);
-
     return label;    
   }
 
@@ -184,9 +188,11 @@ public:
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       timestamp = *static_cast<const int64_t*>(timestamp_val);
+      break;
 
     default:
       timestamp = -1;
+      break;
     }
 
     if (timestamp_val != NULL) {
@@ -230,9 +236,14 @@ public:
         }
         break;
       case GRIN_DATATYPE::Float:
-      case GRIN_DATATYPE::Double:
         if (side_info_->f_num > 0) {
           attr->Add(*static_cast<const float*>(value));
+        }
+        break;
+      case GRIN_DATATYPE::Double:
+        if (side_info_->f_num > 0) {
+          float v = *static_cast<const double*>(value);
+          attr->Add(v);
         }
         break;
       
@@ -263,9 +274,11 @@ public:
   /// Get all the node ids, the count of which is the same with Size().
   /// These ids are distinct.
   virtual const IdArray GetIds() const override {
-    std::vector<IdType> ids(num_vertices_);
-    std::iota(ids.begin(), ids.end(), 0);
-    return IdArray(ids);
+    std::shared_ptr<IdType> ids(new IdType[Size()],
+                                std::default_delete<IdType[]>());
+    IdType* ids_ptr = ids.get();
+    std::iota(ids_ptr, ids_ptr + Size(), 0);
+    return IdArray(ids.get(), Size(), ids);
   }
 
   /// Get all weights if existed, the count of which is the same with Size().
@@ -274,11 +287,13 @@ public:
       return Array<float>();
     }
 
-    std::vector<float> weights(Size());
-    std::generate(weights.begin(), weights.end(), [this, i = 0] () mutable {
+    std::shared_ptr<float> weights(new float[Size()],
+                                   std::default_delete<float[]>());
+    auto weights_ptr = weights.get();
+    std::generate(weights_ptr, weights_ptr + Size(), [this, i = 0] () mutable {
       return GetWeight(i++);
     });
-    return Array<float>(weights);
+    return Array<float>(weights_ptr, Size(), weights);
   }
 
   /// Get all labels if existed, the count of which is the same with Size().
@@ -287,11 +302,13 @@ public:
       return Array<int32_t>();
     }
 
-    std::vector<int32_t> labels(Size());
-    std::generate(labels.begin(), labels.end(), [this, i = 0] () mutable {
+    std::shared_ptr<int32_t> labels(new int32_t[Size()],
+                                    std::default_delete<int32_t[]>());
+    auto labels_ptr = labels.get();
+    std::generate(labels_ptr, labels_ptr + Size(), [this, i = 0] () mutable {
       return GetLabel(i++);
     });
-    return Array<int32_t>(labels);
+    return Array<int32_t>(labels_ptr, Size(), labels);
   }
 
   /// Get all timestamps if existed, the count of which is the same with Size().
@@ -300,11 +317,13 @@ public:
       return Array<int64_t>();
     }
 
-    std::vector<int64_t> timestamps(Size());
-    std::generate(timestamps.begin(), timestamps.end(), [this, i = 0] () mutable {
+    std::shared_ptr<int64_t> timestamps(new int64_t[Size()],
+                                        std::default_delete<int64_t[]>());
+    auto timestamps_ptr = timestamps.get();  
+    std::generate(timestamps_ptr, timestamps_ptr + Size(), [this, i = 0] () mutable {
       return GetTimestamp(i++);
     });
-    return Array<int64_t>(timestamps);
+    return Array<int64_t>(timestamps_ptr, Size(), timestamps);
   }
 
   /// Get all attributes if existed, the count of which is the same with Size().

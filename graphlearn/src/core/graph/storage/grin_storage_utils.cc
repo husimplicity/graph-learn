@@ -67,6 +67,11 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
                               const std::string& edge_type_name,
                               const std::string& src_type_name,
                               const std::string& dst_type_name) {
+  auto side_info = std::make_shared<SideInfo>();
+  if (attrs.empty()) {
+    return side_info.get();
+  }
+
   auto pid = grin_get_partition_id(partitioned_graph, partition);
   auto graph = grin_get_local_graph_from_partition(partitioned_graph, partition);
   auto edge_type = grin_get_edge_type_by_name(graph, edge_type_name.c_str());
@@ -80,7 +85,6 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   if (cache_entry) {
     return cache_entry.get();
   }
-  auto side_info = std::make_shared<SideInfo>();
 
   auto edge_table = grin_get_edge_property_table_by_type(graph, edge_type);
   auto fields = grin_get_edge_property_list_by_type(graph, edge_type);
@@ -138,9 +142,14 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
                               const GRIN_PARTITION& partition,
                               const std::set<std::string>& attrs,
                               const std::string& node_type_name) {
+  auto side_info = std::make_shared<SideInfo>();
+  if (attrs.empty()) {
+    return side_info.get();
+  }
+
   auto pid = grin_get_partition_id(partitioned_graph, partition);
   auto graph = grin_get_local_graph_from_partition(partitioned_graph, partition);
-  auto node_type = grin_get_edge_type_by_name(graph, node_type_name.c_str());
+  auto node_type = grin_get_vertex_type_by_name(graph, node_type_name.c_str());
 
   static std::map<GRIN_PARTITION_ID,
                   std::map<std::string, std::shared_ptr<SideInfo>>>
@@ -152,7 +161,6 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   if (cache_entry) {
     return cache_entry.get();
   }
-  auto side_info = std::make_shared<SideInfo>();
 
   auto vertex_table = grin_get_vertex_property_table_by_type(graph, node_type);
   auto fields = grin_get_vertex_property_list_by_type(graph, node_type);

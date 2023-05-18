@@ -6,10 +6,6 @@
 
 #include "glog/logging.h"
 
-#include "include/config.h"
-#include "core/graph/graph_store.h"
-
-
 extern "C" {
 #include "vineyard/graph/grin/include/partition/partition.h"
 }
@@ -21,36 +17,82 @@ extern "C" {
 #include "core/graph/storage/grin_storage_utils.h"
 #include "core/graph/storage/grin_topo_storage.h"
 
+#include "core/graph/graph_store.h"
+#include "include/config.h"
 using namespace graphlearn::io;
 
 int main(int argc, char **argv) {
-
-#if defined(WITH_VINEYARD)
-  return 1;
-#else
-  return 0;
-#endif
-
+  
   int index = 1;
   std::string ipc_socket = std::string(argv[index++]);
   std::string obj_id = std::string(argv[index++]);
-
-  vineyard::Client client;
-  VINEYARD_CHECK_OK(client.Connect(ipc_socket));
-
-  LOG(INFO) << "Connected to IPCServer: " << ipc_socket;
+  char* argv2[] = {argv[1], argv[2]};
 
   grape::InitMPIComm();
 
-  {
-
-  auto pg = grin_get_partitioned_graph_from_storage(2, argv);
-  GRIN_PARTITION_LIST local_partitions = grin_get_local_partition_list(pg);
+  LOG(INFO) << argc << " " << ipc_socket << " " << obj_id << std::endl;
+  LOG(INFO) << "Note: This grin test is for ogbn_mag_small dataset.";
+  auto pg = grin_get_partitioned_graph_from_storage(2, argv2);
+  auto local_partitions = grin_get_local_partition_list(pg);
   auto partition = grin_get_partition_from_list(pg, local_partitions, 0);
-  GRIN_GRAPH g = grin_get_local_graph_from_partition(pg, partition);
-  
 
+  {
+    LOG(INFO) << "Topo tests";
+    auto edge_store = std::make_shared<GrinEdgeStorage>(pg, partition, "author_writes_paper");
+
+    CHECK_EQ(edge_store->Size(), 394980);
+    CHECK_EQ(edge_store->GetSrcId(0), 0);
+    CHECK_EQ(edge_store->GetSrcId(2), 1);
+    CHECK_EQ(edge_store->GetSrcId(7), edge_store->GetSrcId(8));
+    CHECK_EQ(edge_store->GetDstId(0), edge_store->GetDstId(1433));
+
+    auto topo_store = std::make_shared<GrinTopoStorage>(pg, partition, "author_writes_paper");
+    CHECK_EQ(topo_store->GetInDegree(edge_store->GetDstId(0)), 5);
+    CHECK_EQ(topo_store->GetInDegree(edge_store->GetDstId(6)), 6);
+    CHECK_EQ(topo_store->GetOutDegree(edge_store->GetSrcId(1)), 2);
+    CHECK_EQ(topo_store->GetOutDegree(edge_store->GetSrcId(12)), 4);
+    CHECK_EQ(topo_store->GetNeighbors(edge_store->GetSrcId(1)).Size(), 2);
+    auto nbrs = topo_store->GetNeighbors(edge_store->GetSrcId(12));
+    for (int i = 0; i < nbrs.Size(); ++i) {
+      CHECK_EQ(nbrs[i], edge_store->GetDstId(12 + i));
+    }
+    auto outEdges = topo_store->GetOutEdges(edge_store->GetSrcId(12));
+    for (int i = 0; i < outEdges.Size(); ++i) {
+      CHECK_EQ(outEdges[i], 12 + i);
+    }
+
+    CHECK_EQ(topo_store->GetAllInDegrees()[edge_store->GetDstId(6)], 6);
+    CHECK_EQ(topo_store->GetAllInDegrees()[edge_store->GetDstId(0)], 5);
+
+    CHECK_EQ(topo_store->GetAllOutDegrees()[edge_store->GetSrcId(12)], 4);
+    CHECK_EQ(topo_store->GetAllOutDegrees()[edge_store->GetSrcId(1)], 2);
+
+    CHECK_EQ(topo_store->GetAllSrcIds().Size(), edge_store->Size());
+    LOG(INFO) << "Done!";
+  
+    LOG(INFO) << "Feature tests";
+    auto node_store = std::make_shared<GrinNodeStorage>(pg, partition, "paper", std::set<std::string>{"feat_0", "feat_1", "feat_2", "label"});
+    CHECK_EQ(node_store->Size(), 40000);
+    CHECK_EQ(node_store->GetLabel(4), 55);
+    CHECK_EQ(node_store->GetLabel(0), 95);
+
+    CHECK_EQ(node_store->GetLabels().Size(), node_store->Size());
+    CHECK_EQ(node_store->GetLabels()[4], 55);
+  
+    CHECK_NEAR(
+      node_store->GetAttribute(5)->GetFloats(nullptr)[0], 0.005732, 0.000001);
+    CHECK_NEAR(
+      node_store->GetAttribute(0)->GetFloats(nullptr)[1], -0.080044, 0.000001);
+    CHECK_EQ(node_store->GetAttributes()->size(), node_store->Size());
+    CHECK_NEAR(
+      node_store->GetAttributes()->at(5)->GetFloats(nullptr)[0], 0.005732, 0.000001);
+
+    LOG(INFO) << "Done!";
   }
+
+  grin_destroy_partition(pg, partition);
+  grin_destroy_partition_list(pg, local_partitions);
+  grin_destroy_partitioned_graph(pg);
 
   grape::FinalizeMPIComm();
   
