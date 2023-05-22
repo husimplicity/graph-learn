@@ -54,12 +54,12 @@ public:
       partitioned_graph_(partitioned_graph),
       partition_(partition),
       attrs_(attrs) {
-    graph_ = grin_get_local_graph_from_partition(partitioned_graph_, partition_);
+    graph_ = grin_get_local_graph_by_partition(partitioned_graph_, partition_);
     edge_type_ = grin_get_edge_type_by_name(graph_, edge_type_name.c_str());
-    src_type_ = grin_get_vertex_type_from_list(
-      graph_, grin_get_src_types_from_edge_type(graph_, edge_type_), 0);
-    dst_type_ = grin_get_vertex_type_from_list(
-      graph_, grin_get_dst_types_from_edge_type(graph_, edge_type_), 0);
+    auto src_types = grin_get_src_types_by_edge_type(graph_, edge_type_);
+    src_type_ = grin_get_vertex_type_from_list(graph_, src_types, 0);
+    auto dst_types = grin_get_dst_types_by_edge_type(graph_, edge_type_);
+    dst_type_ = grin_get_vertex_type_from_list(graph_, dst_types, 0);
 
     num_vertices_ = grin_get_vertex_num_by_type(graph_, src_type_);
     indptr_.resize(num_vertices_ + 1);
@@ -85,15 +85,13 @@ public:
 
     auto src_type_name = grin_get_vertex_type_name(graph_, src_type_);
     auto dst_type_name = grin_get_vertex_type_name(graph_, dst_type_);
-    if (!attrs.empty()) {
-      side_info_ = init_edge_side_info(
-        partitioned_graph_, partition_, attrs, 
-        edge_type_name, src_type_name, dst_type_name);
-    }
+    side_info_ = init_edge_side_info(
+      partitioned_graph_, partition_, graph_, attrs, 
+      edge_type_name, src_type_name, dst_type_name);
 
+    grin_destroy_vertex_type_list(graph_, src_types);
+    grin_destroy_vertex_type_list(graph_, dst_types);
     grin_destroy_vertex_list(graph_, src_vertex_list);
-    delete src_type_name;
-    delete dst_type_name;
   }
 
   virtual ~GrinGraphStorage() {
@@ -125,7 +123,7 @@ public:
 
   IdType GetSrcId(IdType edge_id) const override {
     auto src_vertex_list = GetVertexListByType(graph_, src_type_);
-    auto src = grin_get_edge_src(graph_, edge_list_[edge_id]);
+    auto src = grin_get_src_vertex_from_edge(graph_, edge_list_[edge_id]);
     
     auto src_id = grin_get_position_of_vertex_from_sorted_list(
       graph_, src_vertex_list, src);
@@ -136,7 +134,7 @@ public:
 
   IdType GetDstId(IdType edge_id) const override {
     auto dst_vertex_list = GetVertexListByType(graph_, dst_type_);
-    auto dst = grin_get_edge_dst(graph_, edge_list_[edge_id]);
+    auto dst = grin_get_dst_vertex_from_edge(graph_, edge_list_[edge_id]);
     auto dst_id = grin_get_position_of_vertex_from_sorted_list(
       graph_, dst_vertex_list, dst);
     grin_destroy_vertex(graph_, dst);
@@ -162,7 +160,7 @@ public:
       return -1;
     }
 
-    auto edge_dtype = grin_get_edge_property_data_type(graph_, edge_property);
+    auto edge_dtype = grin_get_edge_property_datatype(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
     auto weight_val = grin_get_value_from_edge_property_table(
       graph_, edge_table, edge_list_[edge_id], edge_property);
@@ -187,9 +185,6 @@ public:
       break;
     }
 
-    if (weight_val != NULL) {
-      grin_destroy_value(graph_, edge_dtype, weight_val);
-    }
     grin_destroy_edge_property_table(graph_, edge_table);
     grin_destroy_edge_property(graph_, edge_property);
 
@@ -207,7 +202,7 @@ public:
       return -1;
     }
 
-    auto edge_dtype = grin_get_edge_property_data_type(graph_, edge_property);
+    auto edge_dtype = grin_get_edge_property_datatype(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
     auto label_val = grin_get_value_from_edge_property_table(
       graph_, edge_table, edge_list_[edge_id], edge_property);
@@ -226,9 +221,6 @@ public:
       break;
     }
 
-    if (label_val != NULL) {
-      grin_destroy_value(graph_, edge_dtype, label_val);
-    }
     grin_destroy_edge_property_table(graph_, edge_table);
     grin_destroy_edge_property(graph_, edge_property);
 
@@ -246,7 +238,7 @@ public:
       return -1;
     }
 
-    auto edge_dtype = grin_get_edge_property_data_type(graph_, edge_property);
+    auto edge_dtype = grin_get_edge_property_datatype(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
     auto timestamp_val = grin_get_value_from_edge_property_table(
       graph_, edge_table, edge_list_[edge_id], edge_property);
@@ -267,9 +259,6 @@ public:
       break;
     }
 
-    if (timestamp_val != NULL) {
-      grin_destroy_value(graph_, edge_dtype, timestamp_val);
-    }
     grin_destroy_edge_property_table(graph_, edge_table);
     grin_destroy_edge_property(graph_, edge_property);
 
@@ -294,7 +283,7 @@ public:
     auto property_size = grin_get_edge_property_list_size(graph_, properties);
     for (size_t i = 0; i < property_size; ++i) {
       auto property = grin_get_edge_property_from_list(graph_, properties, i);
-      auto dtype = grin_get_edge_property_data_type(graph_, property);
+      auto dtype = grin_get_edge_property_datatype(graph_, property);
       auto value = grin_get_value_from_row(graph_, row, dtype, i);
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
@@ -328,7 +317,6 @@ public:
         break;
       }
 
-      grin_destroy_value(graph_, dtype, value);
       grin_destroy_edge_property(graph_, property);
     }
 

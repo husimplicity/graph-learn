@@ -63,6 +63,7 @@ GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype) {
 
 SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
                               const GRIN_PARTITION& partition,
+                              const GRIN_GRAPH& graph,
                               const std::set<std::string>& attrs,
                               const std::string& edge_type_name,
                               const std::string& src_type_name,
@@ -73,7 +74,6 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   }
 
   auto pid = grin_get_partition_id(partitioned_graph, partition);
-  auto graph = grin_get_local_graph_from_partition(partitioned_graph, partition);
   auto edge_type = grin_get_edge_type_by_name(graph, edge_type_name.c_str());
 
   static std::map<GRIN_PARTITION_ID,
@@ -92,12 +92,12 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   side_info->format = kDefault;
   for (size_t idx = 0; idx < field_size; ++idx) {
     auto field = grin_get_edge_property_from_list(graph, fields, idx);
-    std::string field_name = grin_get_edge_property_name(graph, field);
+    std::string field_name = grin_get_edge_property_name(graph, edge_type, field);
     if (attrs.find(field_name) == attrs.end()) {
       continue;
     }
 
-    GRIN_DATATYPE field_type = grin_get_edge_property_data_type(graph, field);
+    GRIN_DATATYPE field_type = grin_get_edge_property_datatype(graph, field);
     switch (field_type) {
     case GRIN_DATATYPE::Int32:
     case GRIN_DATATYPE::Int64:
@@ -134,12 +134,12 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   grin_destroy_edge_property_list(graph, fields);
   grin_destroy_edge_property_table(graph, edge_table);
   grin_destroy_edge_type(graph, edge_type);
-  grin_destroy_graph(graph);
   return side_info.get();
 }
 
 SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
                               const GRIN_PARTITION& partition,
+                              const GRIN_GRAPH& graph,
                               const std::set<std::string>& attrs,
                               const std::string& node_type_name) {
   auto side_info = std::make_shared<SideInfo>();
@@ -148,7 +148,6 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   }
 
   auto pid = grin_get_partition_id(partitioned_graph, partition);
-  auto graph = grin_get_local_graph_from_partition(partitioned_graph, partition);
   auto node_type = grin_get_vertex_type_by_name(graph, node_type_name.c_str());
 
   static std::map<GRIN_PARTITION_ID,
@@ -168,12 +167,12 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   side_info->format = kDefault;
   for (size_t idx = 0; idx < field_size; ++idx) {
     auto field = grin_get_vertex_property_from_list(graph, fields, idx);
-    std::string field_name = grin_get_vertex_property_name(graph, field);
+    std::string field_name = grin_get_vertex_property_name(graph, node_type, field);
     if (attrs.find(field_name) == attrs.end()) {
       continue;
     }
 
-    GRIN_DATATYPE field_type = grin_get_vertex_property_data_type(graph, field);
+    GRIN_DATATYPE field_type = grin_get_vertex_property_datatype(graph, field);
     switch (field_type) {
     case GRIN_DATATYPE::Int32:
     case GRIN_DATATYPE::Int64:
@@ -208,7 +207,6 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   grin_destroy_vertex_property_list(graph, fields);
   grin_destroy_vertex_property_table(graph, vertex_table);
   grin_destroy_vertex_type(graph, node_type);
-  grin_destroy_graph(graph);
   return side_info.get();
 }
 

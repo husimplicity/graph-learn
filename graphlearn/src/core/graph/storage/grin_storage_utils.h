@@ -59,6 +59,7 @@ GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype);
 
 SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
                               const GRIN_PARTITION& partition,
+                              const GRIN_GRAPH& graph,
                               const std::set<std::string>& attrs,
                               const std::string& edge_type_name,
                               const std::string& src_type_name,
@@ -66,6 +67,7 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
 
 SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
                               const GRIN_PARTITION& partition,
+                              const GRIN_GRAPH& graph,
                               const std::set<std::string>& attrs,
                               const std::string& node_type_name);
 

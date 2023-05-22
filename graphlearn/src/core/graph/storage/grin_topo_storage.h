@@ -45,9 +45,7 @@ public:
       partitioned_graph, partition, edge_type_name, attrs);
   }
 
-  virtual ~GrinTopoStorage() {
-    delete graph_;
-  };
+  virtual ~GrinTopoStorage() = default;
 
   /// Do some re-organization after data fixed.
   virtual void Build(EdgeStorage *edges) override {}

@@ -44,9 +44,9 @@ public:
       partitioned_graph_(partitioned_graph),
       partition_(partition),
       attrs_(attrs) {
-    graph_ = grin_get_local_graph_from_partition(partitioned_graph_, partition_);
+    graph_ = grin_get_local_graph_by_partition(partitioned_graph_, partition_);
     side_info_ = init_node_side_info(
-      partitioned_graph_, partition_, attrs_, node_type_name);
+      partitioned_graph_, partition_, graph_, attrs_, node_type_name);
     vertex_type_ = grin_get_vertex_type_by_name(graph_, node_type_name.c_str());
     auto vl = GetVertexListByType(graph_, vertex_type_);
     num_vertices_ = grin_get_vertex_num_by_type(graph_, vertex_type_);
@@ -99,7 +99,7 @@ public:
 
     auto node_property = grin_get_vertex_property_by_name(
       graph_, vertex_type_, std::string("weight").c_str());
-    auto node_dtype = grin_get_vertex_property_data_type(graph_, node_property);
+    auto node_dtype = grin_get_vertex_property_datatype(graph_, node_property);
     auto node_table = grin_get_vertex_property_table_by_type(graph_, vertex_type_);
     auto weight_val = grin_get_value_from_vertex_property_table(
       graph_, node_table, vertex_list_[node_id], node_property);
@@ -122,9 +122,6 @@ public:
       break;
     }
 
-    if (weight_val != NULL) {
-      grin_destroy_value(graph_, node_dtype, weight_val);
-    }
     grin_destroy_vertex_property_table(graph_, node_table);
     grin_destroy_vertex_property(graph_, node_property);
 
@@ -138,7 +135,7 @@ public:
 
     auto node_property = grin_get_vertex_property_by_name(
       graph_, vertex_type_, std::string("label").c_str());
-    auto node_dtype = grin_get_vertex_property_data_type(graph_, node_property);
+    auto node_dtype = grin_get_vertex_property_datatype(graph_, node_property);
     auto node_table = grin_get_vertex_property_table_by_type(graph_, vertex_type_);
     auto label_val = grin_get_value_from_vertex_property_table(
       graph_, node_table, vertex_list_[node_id], node_property);
@@ -159,9 +156,6 @@ public:
       break;
     }
 
-    if (label_val != NULL) {
-      grin_destroy_value(graph_, node_dtype, label_val);
-    }
     grin_destroy_vertex_property_table(graph_, node_table);
     grin_destroy_vertex_property(graph_, node_property);
     return label;    
@@ -174,7 +168,7 @@ public:
 
     auto node_property = grin_get_vertex_property_by_name(
       graph_, vertex_type_, std::string("timestamp").c_str());
-    auto node_dtype = grin_get_vertex_property_data_type(graph_, node_property);
+    auto node_dtype = grin_get_vertex_property_datatype(graph_, node_property);
     auto node_table = grin_get_vertex_property_table_by_type(graph_, vertex_type_);
     auto timestamp_val = grin_get_value_from_vertex_property_table(
       graph_, node_table, vertex_list_[node_id], node_property);
@@ -195,9 +189,6 @@ public:
       break;
     }
 
-    if (timestamp_val != NULL) {
-      grin_destroy_value(graph_, node_dtype, timestamp_val);
-    }
     grin_destroy_vertex_property_table(graph_, node_table);
     grin_destroy_vertex_property(graph_, node_property);
 
@@ -224,7 +215,7 @@ public:
     auto property_size = grin_get_vertex_property_list_size(graph_, properties);
     for (size_t i = 0; i < property_size; ++i) {
       auto property = grin_get_vertex_property_from_list(graph_, properties, i);
-      auto dtype = grin_get_vertex_property_data_type(graph_, property);
+      auto dtype = grin_get_vertex_property_datatype(graph_, property);
       auto value = grin_get_value_from_row(graph_, row, dtype, i);
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
@@ -257,7 +248,6 @@ public:
         break;
       }
 
-      grin_destroy_value(graph_, dtype, value);
       grin_destroy_vertex_property(graph_, property);
     }
 
