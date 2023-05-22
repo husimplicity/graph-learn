@@ -168,16 +168,28 @@ public:
     float weight;
     switch (edge_dtype) {
     case GRIN_DATATYPE::Int32:
+      weight = grin_get_int32_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
     case GRIN_DATATYPE::Int64:
+      weight = grin_get_int64_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
     case GRIN_DATATYPE::UInt32:
+      weight = grin_get_uint32_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
     case GRIN_DATATYPE::UInt64:
-      weight = *static_cast<const int64_t*>(weight_val);
+      weight = grin_get_uint64_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Float:
-      weight = *static_cast<const float*>(weight_val);
+      weight = grin_get_float_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Double:
-      weight = *static_cast<const double*>(weight_val);
+      weight = grin_get_double_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
       break;
 
     default:
@@ -204,18 +216,26 @@ public:
 
     auto edge_dtype = grin_get_edge_property_datatype(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
-    auto label_val = grin_get_value_from_edge_property_table(
-      graph_, edge_table, edge_list_[edge_id], edge_property);
 
     int32_t label;
     switch (edge_dtype) {
     case GRIN_DATATYPE::Int32:
-    case GRIN_DATATYPE::Int64:
-    case GRIN_DATATYPE::UInt32:
-    case GRIN_DATATYPE::UInt64:
-      label = *static_cast<const int32_t*>(label_val);
+      label = grin_get_int32_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
       break;
-    
+    case GRIN_DATATYPE::Int64:
+      label = grin_get_int64_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
+    case GRIN_DATATYPE::UInt32:
+      label = grin_get_uint32_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
+    case GRIN_DATATYPE::UInt64:
+      label = grin_get_uint64_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
+
     default:
       label = -1;
       break;
@@ -240,18 +260,32 @@ public:
 
     auto edge_dtype = grin_get_edge_property_datatype(graph_, edge_property);
     auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
-    auto timestamp_val = grin_get_value_from_edge_property_table(
-      graph_, edge_table, edge_list_[edge_id], edge_property);
     
     int64_t timestamp;
     switch (edge_dtype) {
     case GRIN_DATATYPE::Int32:
+      timestamp = grin_get_int32_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
     case GRIN_DATATYPE::Int64:
+      timestamp = grin_get_int64_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
     case GRIN_DATATYPE::UInt32:
+      timestamp = grin_get_uint32_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
     case GRIN_DATATYPE::UInt64:
+      timestamp = grin_get_uint64_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
     case GRIN_DATATYPE::Float:
+      timestamp = grin_get_float_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
+      break;
     case GRIN_DATATYPE::Double:
-      timestamp = *static_cast<const int64_t*>(timestamp_val);
+      timestamp = grin_get_double_from_edge_property_table(
+        graph_, edge_table, edge_list_[edge_id], edge_property);
       break;
     
     default:
@@ -284,32 +318,46 @@ public:
     for (size_t i = 0; i < property_size; ++i) {
       auto property = grin_get_edge_property_from_list(graph_, properties, i);
       auto dtype = grin_get_edge_property_datatype(graph_, property);
-      auto value = grin_get_value_from_row(graph_, row, dtype, i);
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
+        if (side_info_->i_num > 0) {
+          int64_t v = grin_get_int32_from_row(graph_, row, i);
+          attr->Add(v);
+        }
+        break;
       case GRIN_DATATYPE::UInt32:
+        if (side_info_->i_num > 0) {
+          int64_t v = grin_get_uint32_from_row(graph_, row, i);
+          attr->Add(v);
+        }
+        break;
       case GRIN_DATATYPE::Int64:
+        if (side_info_->i_num > 0) {
+          attr->Add((int64_t)grin_get_int64_from_row(graph_, row, i));
+        }
+        break;
       case GRIN_DATATYPE::UInt64:
         if (side_info_->i_num > 0) {
-          attr->Add(*static_cast<const int64_t*>(value));
+          int64_t v = grin_get_uint64_from_row(graph_, row, i);
+          attr->Add(v);
         }
         break;
       case GRIN_DATATYPE::Float:
         if (side_info_->f_num > 0) {
-          float v = *static_cast<const float*>(value);
-          attr->Add(v);
+          attr->Add((float)grin_get_float_from_row(graph_, row, i));
         }
         break;
       case GRIN_DATATYPE::Double:
         if (side_info_->f_num > 0) {
-          float v = *static_cast<const double*>(value);
+          float v = grin_get_double_from_row(graph_, row, i);
           attr->Add(v);
         }
         break;
       
       case GRIN_DATATYPE::String:
         if (side_info_->s_num > 0) {
-          attr->Add(*static_cast<const std::string*>(value));
+          std::string s = grin_get_string_from_row(graph_, row, i);
+          attr->Add(s);
         }
         break;
       
