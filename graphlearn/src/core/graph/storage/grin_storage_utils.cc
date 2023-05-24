@@ -54,6 +54,14 @@ GraphStorage* NewGrinGraphStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
     partitioned_graph, partition, edge_type_name, attrs);
 }
 
+NodeStorage* NewGrinNodeStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
+                                GRIN_PARTITION partition,
+                                const std::string& node_type_name,
+                                const std::set<std::string>& attrs) {
+  return new GrinNodeStorage(
+    partitioned_graph, partition, node_type_name, attrs);
+}
+
 GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype) {
   auto vl_all = grin_get_vertex_list(graph);
   auto vl = grin_select_type_for_vertex_list(graph, vtype, vl_all);

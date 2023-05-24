@@ -28,10 +28,15 @@ namespace graphlearn {
 
 class LocalNoder : public Noder {
 public:
-  LocalNoder(const std::string& type,
-             const std::string& view_type,
-             const std::string& use_attrs) {
-    storage_ = CreateNodeStorage(type, view_type, use_attrs);
+  LocalNoder(
+    const std::string& type,
+    const std::string& view_type,
+    const std::string& use_attrs,
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs) {
+    storage_ = CreateNodeStorage(
+      type, view_type, use_attrs,
+      partitioned_graph, partition, edge_type_name, attrs);
   }
 
   virtual ~LocalNoder() {
@@ -106,10 +111,15 @@ private:
   io::NodeStorage* storage_;
 };
 
-Noder* CreateLocalNoder(const std::string& type,
-                        const std::string& view_type,
-                        const std::string& use_attrs) {
-  return new LocalNoder(type, view_type, use_attrs);
+Noder* CreateLocalNoder(
+  const std::string& type,
+  const std::string& view_type,
+  const std::string& use_attrs,
+  GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+  const std::string& edge_type_name, const std::set<std::string>& attrs) {
+  return new LocalNoder(
+    type, view_type, use_attrs,
+    partitioned_graph, partition, edge_type_name, attrs);
 }
 
 }  // namespace graphlearn

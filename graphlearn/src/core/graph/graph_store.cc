@@ -216,6 +216,10 @@ Status GraphStore::Load(
     return Status::OK();
   }
 
+  if (io::IsGrinStorageEnabled()) {
+    return Status::OK();
+  }
+
   Initializer<io::EdgeSource,
               io::EdgeLoader,
               io::EdgeValue,

@@ -24,10 +24,15 @@ namespace graphlearn {
 
 class LocalGraph : public Graph {
 public:
-  LocalGraph(const std::string& type,
-             const std::string& view_type,
-             const std::string& use_attrs) {
-    storage_ = CreateGraphStorage(type, view_type, use_attrs);
+  LocalGraph(
+    const std::string& type,
+    const std::string& view_type,
+    const std::string& use_attrs,
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs) {
+    storage_ = CreateGraphStorage(
+      type, view_type, use_attrs,
+      partitioned_graph, partition, edge_type_name, attrs);
   }
 
   virtual ~LocalGraph() {
@@ -94,10 +99,15 @@ private:
   io::GraphStorage* storage_;
 };
 
-Graph* CreateLocalGraph(const std::string& type,
-                        const std::string& view_type,
-                        const std::string& use_attrs) {
-  return new LocalGraph(type, view_type, use_attrs);
+Graph* CreateLocalGraph(
+  const std::string& type,
+  const std::string& view_type,
+  const std::string& use_attrs,
+  GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+  const std::string& edge_type_name, const std::set<std::string>& attrs) {
+  return new LocalGraph(
+    type, view_type, use_attrs,
+    partitioned_graph, partition, edge_type_name, attrs);
 }
 
 }  // namespace graphlearn

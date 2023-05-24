@@ -19,6 +19,7 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include "core/graph/storage/types.h"
+#include "vineyard/graph/grin/src/predefine.h"
 
 namespace graphlearn {
 namespace io {
@@ -75,7 +76,9 @@ NodeStorage* NewVineyardNodeStorage(
     const std::string& node_type,
     const std::string& view_type,
     const std::string& use_attrs);
-
+NodeStorage* NewGrinNodeStorage(
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs);
 }  // namespace io
 }  // namespace graphlearn
 

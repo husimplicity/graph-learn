@@ -20,15 +20,19 @@ limitations under the License.
 #include <string>
 #include <unordered_map>
 #include "common/threading/sync/lock.h"
+#include "vineyard/graph/grin/src/predefine.h"
 
 namespace graphlearn {
 
 template <class T>
 class HeterDispatcher {
 public:
-  typedef T* (*TypeCreator)(const std::string& type,
-                            const std::string& view_type,
-                            const std::string& use_attrs);
+  typedef T* (*TypeCreator)(
+    const std::string& type,
+    const std::string& view_type,
+    const std::string& use_attrs,
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs);
 
 public:
   explicit HeterDispatcher(TypeCreator creator)
@@ -41,16 +45,23 @@ public:
     }
   }
 
-  T* LookupOrCreate(const std::string& type,
-                    const std::string& view_type="",
-                    const std::string& use_attrs="") {
+  T* LookupOrCreate(
+    const std::string& type,
+    const std::string& view_type="",
+    const std::string& use_attrs="",
+    GRIN_PARTITIONED_GRAPH partitioned_graph=NULL,
+    GRIN_PARTITION partition=0,
+    const std::string& edge_type_name="",
+    const std::set<std::string>& attrs=std::set<std::string>()) {
     ScopedLocker<std::mutex> _(&mtx_);
     auto it = holder_.find(type);
     if (it != holder_.end()) {
       return it->second;
     }
 
-    T* t = creator_(type, view_type, use_attrs);
+    T* t = creator_(
+      type, view_type, use_attrs,
+      partitioned_graph, partition, edge_type_name, attrs);
     holder_[type] = t;
     return t;
   }

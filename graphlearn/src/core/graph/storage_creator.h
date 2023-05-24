@@ -18,15 +18,22 @@ limitations under the License.
 
 #include "core/graph/storage/graph_storage.h"
 #include "core/graph/storage/node_storage.h"
+#include "vineyard/graph/grin/src/predefine.h"
 
 namespace graphlearn {
 
-io::GraphStorage* CreateGraphStorage(const std::string& type,
-                                     const std::string& view_type,
-                                     const std::string &use_attrs);
-io::NodeStorage* CreateNodeStorage(const std::string& type,
-                                   const std::string& view_type,
-                                   const std::string &use_attrs);
+io::GraphStorage* CreateGraphStorage(
+    const std::string& type,
+    const std::string& view_type,
+    const std::string &use_attrs,
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs);
+io::NodeStorage* CreateNodeStorage(
+    const std::string& type,
+    const std::string& view_type,
+    const std::string &use_attrs,
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs);
 
 }  // namespace graphlearn
 

@@ -46,12 +46,18 @@ public:
 #undef DECLARE_METHOD
 };
 
-Graph* CreateLocalGraph(const std::string& type,
-                        const std::string& view_type,
-                        const std::string& use_attrs);
-Graph* CreateRemoteGraph(const std::string& type,
-                         const std::string& view_type,
-                         const std::string& use_attrs);
+Graph* CreateLocalGraph(
+  const std::string& type,
+  const std::string& view_type,
+  const std::string& use_attrs,
+  GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+  const std::string& edge_type_name, const std::set<std::string>& attrs);
+Graph* CreateRemoteGraph(
+  const std::string& type,
+  const std::string& view_type,
+  const std::string& use_attrs,
+  GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+  const std::string& edge_type_name, const std::set<std::string>& attrs);
 
 }  // namespace graphlearn
 

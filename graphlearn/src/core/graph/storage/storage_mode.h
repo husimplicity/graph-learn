@@ -31,6 +31,7 @@ namespace io {
 bool IsCompressedStorageEnabled();
 bool IsDataDistributionEnabled();
 bool IsVineyardStorageEnabled();
+bool IsGrinStorageEnabled();
 
 }  // namespace io
 }  // namespace graphlearn

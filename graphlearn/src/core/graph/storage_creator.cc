@@ -16,10 +16,14 @@ limitations under the License.
 #include "core/graph/storage_creator.h"
 #include "core/graph/storage/storage_mode.h"
 
+
 namespace graphlearn {
 
 #define CREATE(Type)                                                   \
-  if (io::IsVineyardStorageEnabled()) {                                \
+  if (io::IsGrinStorageEnabled()) {                                    \
+    return io::NewGrin##Type##Storage(                                 \
+      partitioned_graph, partition, edge_type_name, attrs);            \
+  } else if (io::IsVineyardStorageEnabled()) {                         \
     return io::NewVineyard##Type##Storage(type, view_type, use_attrs); \
   } else if (io::IsCompressedStorageEnabled()) {                       \
     return io::NewCompressedMemory##Type##Storage();                   \
@@ -27,15 +31,27 @@ namespace graphlearn {
     return io::NewMemory##Type##Storage();                             \
   }
 
-io::GraphStorage* CreateGraphStorage(const std::string& type,
+io::GraphStorage* CreateGraphStorage(
+  // params for vineyard
+    const std::string& type,
     const std::string& view_type,
-    const std::string &use_attrs) {
+    const std::string &use_attrs,
+  // params for grin
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs
+  ) {
   CREATE(Graph)
 }
 
-io::NodeStorage* CreateNodeStorage(const std::string& type,
+io::NodeStorage* CreateNodeStorage(
+  // params for vineyard
+    const std::string& type,
     const std::string& view_type,
-    const std::string &use_attrs) {
+    const std::string &use_attrs,
+  // params for grin
+    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
+    const std::string& edge_type_name, const std::set<std::string>& attrs
+  ) {
   CREATE(Node)
 }
 
