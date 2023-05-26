@@ -100,33 +100,32 @@ public:
     auto node_property = grin_get_vertex_property_by_name(
       graph_, vertex_type_, std::string("weight").c_str());
     auto node_dtype = grin_get_vertex_property_datatype(graph_, node_property);
-    auto node_table = grin_get_vertex_property_table_by_type(graph_, vertex_type_);
-    
+
     float weight;
     switch (node_dtype) {
     case GRIN_DATATYPE::Int32:
-      weight = grin_get_int32_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      weight = grin_get_vertex_property_value_of_int32(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::Int64:
-      weight = grin_get_int64_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      weight = grin_get_vertex_property_value_of_int64(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::UInt32:
-      weight = grin_get_uint32_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      weight = grin_get_vertex_property_value_of_uint32(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::UInt64:
-      weight = grin_get_uint64_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      weight = grin_get_vertex_property_value_of_uint64(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::Float:
-      weight = grin_get_float_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      weight = grin_get_vertex_property_value_of_float(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::Double:
-      weight = grin_get_double_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      weight = grin_get_vertex_property_value_of_double(
+        graph_, vertex_list_[node_id], node_property);
       break;
 
     default:
@@ -134,7 +133,6 @@ public:
       break;
     }
 
-    grin_destroy_vertex_property_table(graph_, node_table);
     grin_destroy_vertex_property(graph_, node_property);
 
     return weight;
@@ -148,25 +146,24 @@ public:
     auto node_property = grin_get_vertex_property_by_name(
       graph_, vertex_type_, std::string("label").c_str());
     auto node_dtype = grin_get_vertex_property_datatype(graph_, node_property);
-    auto node_table = grin_get_vertex_property_table_by_type(graph_, vertex_type_);
     
     int32_t label;
     switch (node_dtype) {
     case GRIN_DATATYPE::Int32:
-      label = grin_get_int32_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      label = grin_get_vertex_property_value_of_int32(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::Int64:
-      label = grin_get_int64_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      label = grin_get_vertex_property_value_of_int64(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::UInt32:
-      label = grin_get_uint32_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      label = grin_get_vertex_property_value_of_uint32(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::UInt64:
-      label = grin_get_uint64_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      label = grin_get_vertex_property_value_of_uint64(
+        graph_, vertex_list_[node_id], node_property);
       break;
 
     default:
@@ -174,7 +171,6 @@ public:
       break;
     }
 
-    grin_destroy_vertex_property_table(graph_, node_table);
     grin_destroy_vertex_property(graph_, node_property);
     return label;    
   }
@@ -187,41 +183,40 @@ public:
     auto node_property = grin_get_vertex_property_by_name(
       graph_, vertex_type_, std::string("timestamp").c_str());
     auto node_dtype = grin_get_vertex_property_datatype(graph_, node_property);
-    auto node_table = grin_get_vertex_property_table_by_type(graph_, vertex_type_);
     
     int64_t timestamp;
     switch (node_dtype) {
     case GRIN_DATATYPE::Int32:
-      timestamp = grin_get_int32_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      timestamp = grin_get_vertex_property_value_of_int32(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::Int64:
-      timestamp = grin_get_int64_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      timestamp = grin_get_vertex_property_value_of_int64(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::UInt32:
-      timestamp = grin_get_uint32_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      timestamp = grin_get_vertex_property_value_of_uint32(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::UInt64:
-      timestamp = grin_get_uint64_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      timestamp = grin_get_vertex_property_value_of_uint64(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::Float:
-      timestamp = grin_get_float_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      timestamp = grin_get_vertex_property_value_of_float(
+        graph_, vertex_list_[node_id], node_property);
       break;
     case GRIN_DATATYPE::Double:
-      timestamp = grin_get_double_from_vertex_property_table(
-        graph_, node_table, vertex_list_[node_id], node_property);
+      timestamp = grin_get_vertex_property_value_of_double(
+        graph_, vertex_list_[node_id], node_property);
       break;
+
     
     default:
       timestamp = -1;
       break;
     }
 
-    grin_destroy_vertex_property_table(graph_, node_table);
     grin_destroy_vertex_property(graph_, node_property);
 
     return timestamp;
@@ -239,10 +234,6 @@ public:
 
     auto properties = grin_get_vertex_property_list_by_type(
       graph_, vertex_type_);
-    auto node_table = grin_get_vertex_property_table_by_type(
-      graph_, vertex_type_);
-    GRIN_ROW row = grin_get_row_from_vertex_property_table(
-      graph_, node_table, vertex_list_[node_id], properties);
 
     auto property_size = grin_get_vertex_property_list_size(graph_, properties);
     for (size_t i = 0; i < property_size; ++i) {
@@ -251,42 +242,42 @@ public:
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_int32_from_row(graph_, row, i);
+          int64_t v = grin_get_vertex_property_value_of_int32(graph_, vertex_list_[node_id], property);
           attr->Add(v);
         }
         break;
       case GRIN_DATATYPE::UInt32:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_uint32_from_row(graph_, row, i);
+          int64_t v = grin_get_vertex_property_value_of_uint32(graph_, vertex_list_[node_id], property);
           attr->Add(v);
         }
         break;
       case GRIN_DATATYPE::Int64:
         if (side_info_->i_num > 0) {
-          attr->Add((int64_t)grin_get_int64_from_row(graph_, row, i));
+          attr->Add((int64_t)grin_get_vertex_property_value_of_int64(graph_, vertex_list_[node_id], property));
         }
         break;
       case GRIN_DATATYPE::UInt64:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_uint64_from_row(graph_, row, i);
+          int64_t v = grin_get_vertex_property_value_of_uint64(graph_, vertex_list_[node_id], property);
           attr->Add(v);
         }
         break;
       case GRIN_DATATYPE::Float:
         if (side_info_->f_num > 0) {
-          attr->Add((float)grin_get_float_from_row(graph_, row, i));
+          attr->Add(grin_get_vertex_property_value_of_float(graph_, vertex_list_[node_id], property));
         }
         break;
       case GRIN_DATATYPE::Double:
         if (side_info_->f_num > 0) {
-          float v = grin_get_double_from_row(graph_, row, i);
+          float v = grin_get_vertex_property_value_of_double(graph_, vertex_list_[node_id], property);
           attr->Add(v);
         }
         break;
       
       case GRIN_DATATYPE::String:
         if (side_info_->s_num > 0) {
-          std::string s = grin_get_string_from_row(graph_, row, i);
+          std::string s = grin_get_vertex_property_value_of_string(graph_, vertex_list_[node_id], property);
           attr->Add(s);
         }
         break;
@@ -298,8 +289,6 @@ public:
       grin_destroy_vertex_property(graph_, property);
     }
 
-    grin_destroy_row(graph_, row);
-    grin_destroy_vertex_property_table(graph_, node_table);
     grin_destroy_vertex_property_list(graph_, properties);
 
     return Attribute(attr, true);

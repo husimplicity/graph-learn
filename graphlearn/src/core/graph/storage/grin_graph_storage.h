@@ -30,7 +30,7 @@ extern "C" {
 #include "vineyard/graph/grin/include/partition/partition.h"
 #include "vineyard/graph/grin/include/index/order.h"
 #include "vineyard/graph/grin/include/property/type.h"
-#include "vineyard/graph/grin/include/property/propertytable.h"
+#include "vineyard/graph/grin/include/property/row.h"
 #include "vineyard/graph/grin/include/property/property.h"
 #include "vineyard/graph/grin/include/property/propertylist.h"
 }
@@ -161,35 +161,32 @@ public:
     }
 
     auto edge_dtype = grin_get_edge_property_datatype(graph_, edge_property);
-    auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
-    auto weight_val = grin_get_value_from_edge_property_table(
-      graph_, edge_table, edge_list_[edge_id], edge_property);
     
     float weight;
     switch (edge_dtype) {
     case GRIN_DATATYPE::Int32:
-      weight = grin_get_int32_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      weight = grin_get_edge_property_value_of_int32(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Int64:
-      weight = grin_get_int64_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      weight = grin_get_edge_property_value_of_int64(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::UInt32:
-      weight = grin_get_uint32_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      weight = grin_get_edge_property_value_of_uint32(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::UInt64:
-      weight = grin_get_uint64_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      weight = grin_get_edge_property_value_of_uint64(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Float:
-      weight = grin_get_float_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      weight = grin_get_edge_property_value_of_float(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Double:
-      weight = grin_get_double_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      weight = grin_get_edge_property_value_of_double(
+        graph_, edge_list_[edge_id], edge_property);
       break;
 
     default:
@@ -197,7 +194,6 @@ public:
       break;
     }
 
-    grin_destroy_edge_property_table(graph_, edge_table);
     grin_destroy_edge_property(graph_, edge_property);
 
     return weight;
@@ -215,25 +211,24 @@ public:
     }
 
     auto edge_dtype = grin_get_edge_property_datatype(graph_, edge_property);
-    auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
 
     int32_t label;
     switch (edge_dtype) {
     case GRIN_DATATYPE::Int32:
-      label = grin_get_int32_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      label = grin_get_edge_property_value_of_int32(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Int64:
-      label = grin_get_int64_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      label = grin_get_edge_property_value_of_int64(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::UInt32:
-      label = grin_get_uint32_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      label = grin_get_edge_property_value_of_uint32(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::UInt64:
-      label = grin_get_uint64_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      label = grin_get_edge_property_value_of_uint64(
+        graph_, edge_list_[edge_id], edge_property);
       break;
 
     default:
@@ -241,7 +236,6 @@ public:
       break;
     }
 
-    grin_destroy_edge_property_table(graph_, edge_table);
     grin_destroy_edge_property(graph_, edge_property);
 
     return label;
@@ -259,41 +253,38 @@ public:
     }
 
     auto edge_dtype = grin_get_edge_property_datatype(graph_, edge_property);
-    auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
-    
+
     int64_t timestamp;
     switch (edge_dtype) {
     case GRIN_DATATYPE::Int32:
-      timestamp = grin_get_int32_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      timestamp = grin_get_edge_property_value_of_int32(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Int64:
-      timestamp = grin_get_int64_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      timestamp = grin_get_edge_property_value_of_int64(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::UInt32:
-      timestamp = grin_get_uint32_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      timestamp = grin_get_edge_property_value_of_uint32(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::UInt64:
-      timestamp = grin_get_uint64_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      timestamp = grin_get_edge_property_value_of_uint64(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Float:
-      timestamp = grin_get_float_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      timestamp = grin_get_edge_property_value_of_float(
+        graph_, edge_list_[edge_id], edge_property);
       break;
     case GRIN_DATATYPE::Double:
-      timestamp = grin_get_double_from_edge_property_table(
-        graph_, edge_table, edge_list_[edge_id], edge_property);
+      timestamp = grin_get_edge_property_value_of_double(
+        graph_, edge_list_[edge_id], edge_property);
       break;
-    
     default:
       timestamp = -1;
       break;
     }
 
-    grin_destroy_edge_property_table(graph_, edge_table);
     grin_destroy_edge_property(graph_, edge_property);
 
     return timestamp;
@@ -310,10 +301,6 @@ public:
     auto attr = NewDataHeldAttributeValue();
 
     auto properties = grin_get_edge_property_list_by_type(graph_, edge_type_);
-    auto edge_table = grin_get_edge_property_table_by_type(graph_, edge_type_);
-    GRIN_ROW row = grin_get_row_from_edge_property_table(
-      graph_, edge_table, edge_list_[edge_id], properties);
-
     auto property_size = grin_get_edge_property_list_size(graph_, properties);
     for (size_t i = 0; i < property_size; ++i) {
       auto property = grin_get_edge_property_from_list(graph_, properties, i);
@@ -321,42 +308,42 @@ public:
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_int32_from_row(graph_, row, i);
+          int64_t v = grin_get_edge_property_value_of_int32(graph_, edge_list_[edge_id], property);
           attr->Add(v);
         }
         break;
       case GRIN_DATATYPE::UInt32:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_uint32_from_row(graph_, row, i);
+          int64_t v = grin_get_edge_property_value_of_uint32(graph_, edge_list_[edge_id], property);
           attr->Add(v);
         }
         break;
       case GRIN_DATATYPE::Int64:
         if (side_info_->i_num > 0) {
-          attr->Add((int64_t)grin_get_int64_from_row(graph_, row, i));
+          attr->Add((int64_t)grin_get_edge_property_value_of_int64(graph_, edge_list_[edge_id], property));
         }
         break;
       case GRIN_DATATYPE::UInt64:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_uint64_from_row(graph_, row, i);
+          int64_t v = grin_get_edge_property_value_of_uint64(graph_, edge_list_[edge_id], property);
           attr->Add(v);
         }
         break;
       case GRIN_DATATYPE::Float:
         if (side_info_->f_num > 0) {
-          attr->Add((float)grin_get_float_from_row(graph_, row, i));
+          attr->Add(grin_get_edge_property_value_of_float(graph_, edge_list_[edge_id], property));
         }
         break;
       case GRIN_DATATYPE::Double:
         if (side_info_->f_num > 0) {
-          float v = grin_get_double_from_row(graph_, row, i);
+          float v = grin_get_edge_property_value_of_double(graph_, edge_list_[edge_id], property);
           attr->Add(v);
         }
         break;
       
       case GRIN_DATATYPE::String:
         if (side_info_->s_num > 0) {
-          std::string s = grin_get_string_from_row(graph_, row, i);
+          std::string s = grin_get_edge_property_value_of_string(graph_, edge_list_[edge_id], property);
           attr->Add(s);
         }
         break;
@@ -368,8 +355,6 @@ public:
       grin_destroy_edge_property(graph_, property);
     }
 
-    grin_destroy_row(graph_, row);
-    grin_destroy_edge_property_table(graph_, edge_table);
     grin_destroy_edge_property_list(graph_, properties);
 
     return Attribute(attr, true);

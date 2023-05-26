@@ -94,7 +94,6 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
     return cache_entry.get();
   }
 
-  auto edge_table = grin_get_edge_property_table_by_type(graph, edge_type);
   auto fields = grin_get_edge_property_list_by_type(graph, edge_type);
   size_t field_size = grin_get_edge_property_list_size(graph, fields);
   side_info->format = kDefault;
@@ -140,7 +139,6 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   side_info_cache[pid][edge_type_name] = side_info;
 
   grin_destroy_edge_property_list(graph, fields);
-  grin_destroy_edge_property_table(graph, edge_table);
   grin_destroy_edge_type(graph, edge_type);
   return side_info.get();
 }
@@ -169,7 +167,6 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
     return cache_entry.get();
   }
 
-  auto vertex_table = grin_get_vertex_property_table_by_type(graph, node_type);
   auto fields = grin_get_vertex_property_list_by_type(graph, node_type);
   size_t field_size = grin_get_vertex_property_list_size(graph, fields);
   side_info->format = kDefault;
@@ -213,7 +210,6 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   side_info_cache[pid][node_type_name] = side_info;
 
   grin_destroy_vertex_property_list(graph, fields);
-  grin_destroy_vertex_property_table(graph, vertex_table);
   grin_destroy_vertex_type(graph, node_type);
   return side_info.get();
 }
