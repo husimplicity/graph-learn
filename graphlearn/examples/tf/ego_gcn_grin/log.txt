@@ -1,0 +1,10 @@
+argc: 1 argv: /tmp/vineyard.sock 83962328944794588
+Get part done!
+argc: 1 argv: /tmp/vineyard.sock 83962328944794588
+argc: 1 argv: /tmp/vineyard.sock 83962328944794588
+argc: 1 argv: /tmp/vineyard.sock 83962328944794588
+argc: 1 argv: /tmp/vineyard.sock 83962328944794588
+83962328944794588
+Tensor("IteratorGetNext:1", shape=(?,), dtype=int32)
+Tensor("MatMul_2:0", shape=(?, 349), dtype=float32)
+Start training...

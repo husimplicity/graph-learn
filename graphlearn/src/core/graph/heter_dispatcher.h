@@ -30,10 +30,7 @@ public:
   typedef T* (*TypeCreator)(
     const std::string& type,
     const std::string& view_type,
-    const std::string& use_attrs,
-    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs);
-
+    const std::string& use_attrs);
 public:
   explicit HeterDispatcher(TypeCreator creator)
       : creator_(creator) {
@@ -48,20 +45,14 @@ public:
   T* LookupOrCreate(
     const std::string& type,
     const std::string& view_type="",
-    const std::string& use_attrs="",
-    GRIN_PARTITIONED_GRAPH partitioned_graph=NULL,
-    GRIN_PARTITION partition=0,
-    const std::string& edge_type_name="",
-    const std::set<std::string>& attrs=std::set<std::string>()) {
+    const std::string& use_attrs="") {
     ScopedLocker<std::mutex> _(&mtx_);
     auto it = holder_.find(type);
     if (it != holder_.end()) {
       return it->second;
     }
 
-    T* t = creator_(
-      type, view_type, use_attrs,
-      partitioned_graph, partition, edge_type_name, attrs);
+    T* t = creator_(type, view_type, use_attrs);
     holder_[type] = t;
     return t;
   }

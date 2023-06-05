@@ -37,13 +37,30 @@ namespace io {
 
 class GrinNodeStorage : public graphlearn::io::NodeStorage {
 public:
-  explicit GrinNodeStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
-                           GRIN_PARTITION partition,
-                           const std::string& node_type_name,
-                           const std::set<std::string>& attrs=std::set<std::string>()):
-      partitioned_graph_(partitioned_graph),
-      partition_(partition),
-      attrs_(attrs) {
+  explicit GrinNodeStorage(
+    const std::string& node_type="",
+    const std::string& use_attrs="") {
+
+    auto node_type_name = node_type;
+    boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(","));
+
+    // char* socket = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
+    // std::strcpy(socket, GLOBAL_FLAG(VineyardIPCSocket).c_str());
+    // char* gid = new char[std::to_string(GLOBAL_FLAG(VineyardGraphID)).size()];
+    // std::strcpy(gid, std::to_string(GLOBAL_FLAG(VineyardGraphID)).c_str());
+
+    char** argv = new char*[2];
+    argv[0] = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
+    std::strcpy(argv[0], GLOBAL_FLAG(VineyardIPCSocket).c_str());
+    argv[1] = new char[std::to_string(GLOBAL_FLAG(VineyardGraphID)).size()];
+    std::strcpy(argv[1], std::to_string(GLOBAL_FLAG(VineyardGraphID)).c_str());
+    int argc = sizeof(argv) / sizeof(char*);
+    std::cout << "argc: " << argc << " argv: " << argv[0] << " " << argv[1] <<std::endl;
+    partitioned_graph_ = grin_get_partitioned_graph_from_storage(2, argv);
+    local_partitions_ = grin_get_local_partition_list(partitioned_graph_);
+    partition_ = grin_get_partition_from_list(
+      partitioned_graph_, local_partitions_, 0);
+
     graph_ = grin_get_local_graph_by_partition(partitioned_graph_, partition_);
     side_info_ = init_node_side_info(
       partitioned_graph_, partition_, graph_, attrs_, node_type_name);
@@ -57,14 +74,20 @@ public:
       vertex_list_.emplace_back(v);
     }
     grin_destroy_vertex_list(graph_, vl);
+    delete[] argv;
+    LOG(INFO) << "Create GrinNodeStorage Done." << Size();
   }
 
   virtual ~GrinNodeStorage() {
+    // delete side_info_;
     for (auto v : vertex_list_) {
       grin_destroy_vertex(graph_, v);
     }
     grin_destroy_vertex_type(graph_, vertex_type_);
     grin_destroy_graph(graph_);
+    // grin_destroy_partition(partitioned_graph_, partition_);
+    // grin_destroy_partition_list(partitioned_graph_, local_partitions_);
+    // grin_destroy_partitioned_graph(partitioned_graph_);
   }
 
   virtual void Lock() override {}
@@ -368,6 +391,7 @@ public:
 
 private:
   GRIN_PARTITIONED_GRAPH partitioned_graph_;
+  GRIN_PARTITION_LIST local_partitions_;
   GRIN_PARTITION partition_;
   GRIN_GRAPH graph_;
 

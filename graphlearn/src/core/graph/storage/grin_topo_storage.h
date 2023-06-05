@@ -39,10 +39,9 @@ namespace io {
 class GrinTopoStorage : public graphlearn::io::TopoStorage {
 public:
   explicit GrinTopoStorage(
-    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs=std::set<std::string>()) {
-    graph_ = new GrinGraphStorage(
-      partitioned_graph, partition, edge_type_name, attrs);
+    const std::string& edge_label,
+    const std::string& use_attrs="") {
+    graph_ = new GrinGraphStorage(edge_label, use_attrs);
   }
 
   virtual ~GrinTopoStorage() = default;

@@ -49,10 +49,6 @@ using graphlearn::io::IndexArray;
 using graphlearn::io::NewDataHeldAttributeValue;
 using graphlearn::io::SideInfo;
 
-// GraphStorage* NewGrinGraphStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
-//                                   GRIN_PARTITION partition,
-//                                   const std::string& edge_type_name,
-//                                   const std::set<std::string>& attrs);
 
 GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype);
 

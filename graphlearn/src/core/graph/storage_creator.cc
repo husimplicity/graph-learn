@@ -21,8 +21,7 @@ namespace graphlearn {
 
 #define CREATE(Type)                                                   \
   if (io::IsGrinStorageEnabled()) {                                    \
-    return io::NewGrin##Type##Storage(                                 \
-      partitioned_graph, partition, edge_type_name, attrs);            \
+    return io::NewGrin##Type##Storage(type, use_attrs);                \
   } else if (io::IsVineyardStorageEnabled()) {                         \
     return io::NewVineyard##Type##Storage(type, view_type, use_attrs); \
   } else if (io::IsCompressedStorageEnabled()) {                       \
@@ -35,10 +34,7 @@ io::GraphStorage* CreateGraphStorage(
   // params for vineyard
     const std::string& type,
     const std::string& view_type,
-    const std::string &use_attrs,
-  // params for grin
-    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs
+    const std::string &use_attrs
   ) {
   CREATE(Graph)
 }
@@ -47,10 +43,7 @@ io::NodeStorage* CreateNodeStorage(
   // params for vineyard
     const std::string& type,
     const std::string& view_type,
-    const std::string &use_attrs,
-  // params for grin
-    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs
+    const std::string &use_attrs
   ) {
   CREATE(Node)
 }

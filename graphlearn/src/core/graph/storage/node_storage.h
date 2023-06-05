@@ -77,8 +77,8 @@ NodeStorage* NewVineyardNodeStorage(
     const std::string& view_type,
     const std::string& use_attrs);
 NodeStorage* NewGrinNodeStorage(
-    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs);
+    const std::string& node_type,
+    const std::string& use_attrs);
 }  // namespace io
 }  // namespace graphlearn
 

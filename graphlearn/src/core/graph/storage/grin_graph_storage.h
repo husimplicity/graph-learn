@@ -19,6 +19,7 @@ limitations under the License.
 #include <iostream>
 #include <memory>
 #include <numeric>
+#include <cstdio>
 
 extern "C" {
 
@@ -49,11 +50,29 @@ class GrinEdgeStorage;
 class GrinGraphStorage : public GraphStorage {
 public:
   explicit GrinGraphStorage(
-    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs=std::set<std::string>()):
-      partitioned_graph_(partitioned_graph),
-      partition_(partition),
-      attrs_(attrs) {
+    const std::string& edge_label,
+    const std::string& use_attrs=""){
+
+    auto edge_type_name = edge_label;
+    boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(","));
+
+    // char* socket = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
+    // std::strcpy(socket, GLOBAL_FLAG(VineyardIPCSocket).c_str());
+    // char* gid = new char[std::to_string(GLOBAL_FLAG(VineyardGraphID)).size()];
+    // std::strcpy(gid, std::to_string(GLOBAL_FLAG(VineyardGraphID)).c_str());
+
+    char** argv = new char*[2];
+    argv[0] = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
+    std::strcpy(argv[0], GLOBAL_FLAG(VineyardIPCSocket).c_str());
+    argv[1] = new char[std::to_string(GLOBAL_FLAG(VineyardGraphID)).size()];
+    std::strcpy(argv[1], std::to_string(GLOBAL_FLAG(VineyardGraphID)).c_str());
+    int argc = sizeof(argv) / sizeof(char*);
+    std::cout << "argc: " << argc << " argv: " << argv[0] << " " << argv[1] <<std::endl;
+    partitioned_graph_ = grin_get_partitioned_graph_from_storage(2, argv);
+    local_partitions_ = grin_get_local_partition_list(partitioned_graph_);
+    partition_ = grin_get_partition_from_list(
+      partitioned_graph_, local_partitions_, 0);
+    std::cout << "Get part done!" << std::endl;
     graph_ = grin_get_local_graph_by_partition(partitioned_graph_, partition_);
     edge_type_ = grin_get_edge_type_by_name(graph_, edge_type_name.c_str());
     auto src_types = grin_get_src_types_by_edge_type(graph_, edge_type_);
@@ -86,16 +105,18 @@ public:
     auto src_type_name = grin_get_vertex_type_name(graph_, src_type_);
     auto dst_type_name = grin_get_vertex_type_name(graph_, dst_type_);
     side_info_ = init_edge_side_info(
-      partitioned_graph_, partition_, graph_, attrs, 
+      partitioned_graph_, partition_, graph_, attrs_, 
       edge_type_name, src_type_name, dst_type_name);
 
     grin_destroy_vertex_type_list(graph_, src_types);
     grin_destroy_vertex_type_list(graph_, dst_types);
     grin_destroy_vertex_list(graph_, src_vertex_list);
+    delete[] argv;
+    LOG(INFO) << "Create GrinGraphStorage Done.";
   }
 
   virtual ~GrinGraphStorage() {
-    delete side_info_;
+    // delete side_info_;
 
     for (auto e : edge_list_) {
       grin_destroy_edge(graph_, e);
@@ -104,6 +125,9 @@ public:
     grin_destroy_vertex_type(graph_, src_type_);
     grin_destroy_vertex_type(graph_, dst_type_);
     grin_destroy_graph(graph_);
+    // grin_destroy_partition(partitioned_graph_, partition_);
+    // grin_destroy_partition_list(partitioned_graph_, local_partitions_);
+    // grin_destroy_partitioned_graph(partitioned_graph_);
   }
 
   virtual void Lock() override {}
@@ -456,8 +480,8 @@ public:
 
 private:
   friend class GrinEdgeStorage;  
-
   GRIN_PARTITIONED_GRAPH partitioned_graph_;
+  GRIN_PARTITION_LIST local_partitions_;
   GRIN_PARTITION partition_;
   GRIN_GRAPH graph_;
   GRIN_EDGE_TYPE edge_type_;

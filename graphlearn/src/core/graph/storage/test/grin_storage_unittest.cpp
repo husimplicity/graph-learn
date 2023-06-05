@@ -32,13 +32,12 @@ int main(int argc, char **argv) {
 
   LOG(INFO) << argc << " " << ipc_socket << " " << obj_id << std::endl;
   LOG(INFO) << "Note: This grin test is for ogbn_mag_small dataset.";
-  auto pg = grin_get_partitioned_graph_from_storage(2, argv2);
-  auto local_partitions = grin_get_local_partition_list(pg);
-  auto partition = grin_get_partition_from_list(pg, local_partitions, 0);
+  graphlearn::SetGlobalFlagVineyardGraphID(std::stoll(obj_id));
+  graphlearn::SetGlobalFlagVineyardIPCSocket(ipc_socket);
 
   {
     LOG(INFO) << "Topo tests";
-    auto edge_store = std::make_shared<GrinEdgeStorage>(pg, partition, "author_writes_paper");
+    auto edge_store = std::make_shared<GrinEdgeStorage>("writes");
 
     CHECK_EQ(edge_store->Size(), 394980);
     CHECK_EQ(edge_store->GetSrcId(0), 0);
@@ -46,7 +45,7 @@ int main(int argc, char **argv) {
     CHECK_EQ(edge_store->GetSrcId(7), edge_store->GetSrcId(8));
     CHECK_EQ(edge_store->GetDstId(0), edge_store->GetDstId(1433));
 
-    auto topo_store = std::make_shared<GrinTopoStorage>(pg, partition, "author_writes_paper");
+    auto topo_store = std::make_shared<GrinTopoStorage>("writes");
     CHECK_EQ(topo_store->GetInDegree(edge_store->GetDstId(0)), 5);
     CHECK_EQ(topo_store->GetInDegree(edge_store->GetDstId(6)), 6);
     CHECK_EQ(topo_store->GetOutDegree(edge_store->GetSrcId(1)), 2);
@@ -71,7 +70,7 @@ int main(int argc, char **argv) {
     LOG(INFO) << "Done!";
   
     LOG(INFO) << "Feature tests";
-    auto node_store = std::make_shared<GrinNodeStorage>(pg, partition, "paper", std::set<std::string>{"feat_0", "feat_1", "feat_2", "label"});
+    auto node_store = std::make_shared<GrinNodeStorage>("paper", "feat_0,feat_1,feat_2,label");
     CHECK_EQ(node_store->Size(), 40000);
     CHECK_EQ(node_store->GetLabel(4), 55);
     CHECK_EQ(node_store->GetLabel(0), 95);
@@ -89,10 +88,6 @@ int main(int argc, char **argv) {
 
     LOG(INFO) << "Done!";
   }
-
-  grin_destroy_partition(pg, partition);
-  grin_destroy_partition_list(pg, local_partitions);
-  grin_destroy_partitioned_graph(pg);
 
   grape::FinalizeMPIComm();
   

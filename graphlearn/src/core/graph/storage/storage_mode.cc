@@ -35,11 +35,11 @@ bool IsDataDistributionEnabled() {
 }
 
 bool IsVineyardStorageEnabled() {
-  return GLOBAL_FLAG(StorageMode) == kVineyardEnabled;
+  return GLOBAL_FLAG(StorageMode) & kVineyardEnabled;
 }
 
 bool IsGrinStorageEnabled() {
-  return GLOBAL_FLAG(StorageMode) == kGrinEnabled;
+  return GLOBAL_FLAG(StorageMode) & kGrinEnabled;
 }
 }  // namespace io
 }  // namespace graphlearn

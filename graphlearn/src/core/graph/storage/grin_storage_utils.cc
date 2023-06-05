@@ -25,8 +25,6 @@ limitations under the License.
 #include "core/graph/storage/node_storage.h"
 #include "core/graph/storage/topo_storage.h"
 
-
-
 #include "include/config.h"
 
 namespace graphlearn {
@@ -46,20 +44,18 @@ using graphlearn::io::IndexArray;
 using graphlearn::io::NewDataHeldAttributeValue;
 using graphlearn::io::SideInfo;
 
-GraphStorage* NewGrinGraphStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
-                                  GRIN_PARTITION partition,
-                                  const std::string& edge_type_name,
-                                  const std::set<std::string>& attrs) {
-  return new GrinGraphStorage(
-    partitioned_graph, partition, edge_type_name, attrs);
+GraphStorage* NewGrinGraphStorage(
+    const std::string& edge_label,
+    const std::string& use_attrs="") {
+  LOG(INFO) << "Create GrinGraphStorage.";
+  return new GrinGraphStorage(edge_label, use_attrs);
 }
 
-NodeStorage* NewGrinNodeStorage(GRIN_PARTITIONED_GRAPH partitioned_graph,
-                                GRIN_PARTITION partition,
-                                const std::string& node_type_name,
-                                const std::set<std::string>& attrs) {
-  return new GrinNodeStorage(
-    partitioned_graph, partition, node_type_name, attrs);
+NodeStorage* NewGrinNodeStorage(    
+    const std::string& node_type="",
+    const std::string& use_attrs="") {
+  LOG(INFO) << "Create GrinNodeStorage.";
+  return new GrinNodeStorage(node_type, use_attrs);
 }
 
 GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype) {

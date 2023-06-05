@@ -27,12 +27,8 @@ public:
   RemoteNoder(
     const std::string& type,
     const std::string& view_type,
-    const std::string& use_attrs,
-    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs) {
-    local_ = CreateLocalNoder(
-      type, view_type, use_attrs,
-      partitioned_graph, partition, edge_type_name, attrs);
+    const std::string& use_attrs) {
+    local_ = CreateLocalNoder(type, view_type, use_attrs);
     remote_storage_ = new io::RemoteNodeStorage();
   }
 
@@ -81,12 +77,8 @@ private:
 Noder* CreateRemoteNoder(
     const std::string& type,
     const std::string& view_type,
-    const std::string& use_attrs,
-    GRIN_PARTITIONED_GRAPH partitioned_graph, GRIN_PARTITION partition,
-    const std::string& edge_type_name, const std::set<std::string>& attrs) {
-  return new RemoteNoder(
-    type, view_type, use_attrs,
-    partitioned_graph, partition, edge_type_name, attrs);
+    const std::string& use_attrs) {
+  return new RemoteNoder(type, view_type, use_attrs);
 }
 
 }  // namespace graphlearn

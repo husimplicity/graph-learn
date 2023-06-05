@@ -88,6 +88,8 @@ class Graph(object):
     self._with_vineyard = False
     self._vineyard_handle = None
 
+    self._with_grin = False
+
     def stop_sampling():
       if self._server:
         self._server.stop_sampling()
@@ -379,6 +381,7 @@ class Graph(object):
             direction=pywrap.Direction.REVERSED,
             option=option)
         self._edge_sources.append(edge_source_reverse)
+
   def init(self, task_index=0, task_count=1,
            cluster="", job_name="", **kwargs):
     """ Initialize the graph object in local mode or distributed mode.
@@ -417,6 +420,10 @@ class Graph(object):
     """
     if self._with_vineyard:
       pywrap.set_storage_mode(8)
+      pywrap.set_tracker_mode(0)
+
+    if self._with_grin:
+      pywrap.set_storage_mode(16)
       pywrap.set_tracker_mode(0)
 
     if not cluster and task_count == 1:
@@ -510,7 +517,7 @@ class Graph(object):
   def add_dataset(self, ds):
     self._datasets.append(ds)
 
-  def init_vineyard(self, server_index=None, worker_index=None, worker_count=None,
+  def c(self, server_index=None, worker_index=None, worker_count=None,
                     standalone=False):
     if not self._with_vineyard:
       raise ValueError('Not a vineyard graph')
