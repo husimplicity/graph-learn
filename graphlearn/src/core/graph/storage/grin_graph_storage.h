@@ -54,12 +54,7 @@ public:
     const std::string& use_attrs=""){
 
     auto edge_type_name = edge_label;
-    boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(","));
-
-    // char* socket = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
-    // std::strcpy(socket, GLOBAL_FLAG(VineyardIPCSocket).c_str());
-    // char* gid = new char[std::to_string(GLOBAL_FLAG(VineyardGraphID)).size()];
-    // std::strcpy(gid, std::to_string(GLOBAL_FLAG(VineyardGraphID)).c_str());
+    boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(";"));
 
     char** argv = new char*[2];
     argv[0] = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
@@ -67,7 +62,7 @@ public:
     argv[1] = new char[std::to_string(GLOBAL_FLAG(VineyardGraphID)).size()];
     std::strcpy(argv[1], std::to_string(GLOBAL_FLAG(VineyardGraphID)).c_str());
     int argc = sizeof(argv) / sizeof(char*);
-    std::cout << "argc: " << argc << " argv: " << argv[0] << " " << argv[1] <<std::endl;
+    std::cout << "argc: " << 2 << " argv: " << argv[0] << " " << argv[1] <<std::endl;
     partitioned_graph_ = grin_get_partitioned_graph_from_storage(2, argv);
     local_partitions_ = grin_get_local_partition_list(partitioned_graph_);
     partition_ = grin_get_partition_from_list(
@@ -125,9 +120,9 @@ public:
     grin_destroy_vertex_type(graph_, src_type_);
     grin_destroy_vertex_type(graph_, dst_type_);
     grin_destroy_graph(graph_);
-    // grin_destroy_partition(partitioned_graph_, partition_);
-    // grin_destroy_partition_list(partitioned_graph_, local_partitions_);
-    // grin_destroy_partitioned_graph(partitioned_graph_);
+    grin_destroy_partition(partitioned_graph_, partition_);
+    grin_destroy_partition_list(partitioned_graph_, local_partitions_);
+    grin_destroy_partitioned_graph(partitioned_graph_);
   }
 
   virtual void Lock() override {}

@@ -111,8 +111,10 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       side_info->f_num += 1;
+      break;
     case GRIN_DATATYPE::String:
       side_info->s_num += 1;
+      break;
     default:
       break;
     }
@@ -168,7 +170,7 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   side_info->format = kDefault;
   for (size_t idx = 0; idx < field_size; ++idx) {
     auto field = grin_get_vertex_property_from_list(graph, fields, idx);
-    std::string field_name = grin_get_vertex_property_name(graph, node_type, field);
+    std::string field_name = grin_get_vertex_property_name(graph, node_type, field);\
     if (attrs.find(field_name) == attrs.end()) {
       continue;
     }
@@ -184,8 +186,10 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
     case GRIN_DATATYPE::Float:
     case GRIN_DATATYPE::Double:
       side_info->f_num += 1;
+      break;
     case GRIN_DATATYPE::String:
       side_info->s_num += 1;
+      break;
     default:
       break;
     }

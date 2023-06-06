@@ -76,9 +76,9 @@ def load_graph():
   features = ['feat_%d' % i for i in range(FLAGS.features_num)]
   g.node_attributes(FLAGS.node_type, features, 0, FLAGS.features_num, 0)
   g.edge_attributes(FLAGS.edge_type, [], 0, 0, 0)
-  g.node_view(FLAGS.node_type, gl.Mask.TRAIN, 0, 100, (0, 75))
-  g.node_view(FLAGS.node_type, gl.Mask.VAL, 0, 100, (75, 85))
-  g.node_view(FLAGS.node_type, gl.Mask.TEST, 0, 100, (85, 100))
+  # g.node_view(FLAGS.node_type, gl.Mask.TRAIN, 0, 100, (0, 75))
+  # g.node_view(FLAGS.node_type, gl.Mask.VAL, 0, 100, (75, 85))
+  # g.node_view(FLAGS.node_type, gl.Mask.TEST, 0, 100, (85, 100))
   return g
 
 def main(unused_argv):
@@ -91,12 +91,14 @@ def main(unused_argv):
 
   # prepare train dataset
   train_data = EgoSAGESupervisedDataLoader(
-    g, gl.Mask.TRAIN,
+    g, gl.Mask.NONE,
     node_type=FLAGS.node_type, edge_type=FLAGS.edge_type,
     nbrs_num=nbrs_num, hops_num=FLAGS.hops_num,
   )
   train_embedding = model.forward(train_data.src_ego)
   train_labels = train_data.src_ego.src.labels
+  print(train_labels)
+  print(train_embedding)
   loss = tf.reduce_mean(
     tf.nn.sparse_softmax_cross_entropy_with_logits(
       labels=train_labels, logits=train_embedding,
@@ -105,23 +107,23 @@ def main(unused_argv):
   optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
 
   # prepare test dataset
-  test_data = EgoSAGESupervisedDataLoader(
-    g, gl.Mask.TEST,
-    node_type=FLAGS.node_type, edge_type=FLAGS.edge_type,
-    nbrs_num=nbrs_num, hops_num=FLAGS.hops_num,
-  )
-  test_embedding = model.forward(test_data.src_ego)
-  test_labels = test_data.src_ego.src.labels
-  test_indices = tf.math.argmax(test_embedding, 1, output_type=tf.int32)
-  test_acc = tf.div(
-    tf.reduce_sum(tf.cast(tf.math.equal(test_indices, test_labels), tf.float32)),
-    tf.cast(tf.shape(test_labels)[0], tf.float32),
-  )
+  # test_data = EgoSAGESupervisedDataLoader(
+  #   g, gl.Mask.TEST,
+  #   node_type=FLAGS.node_type, edge_type=FLAGS.edge_type,
+  #   nbrs_num=nbrs_num, hops_num=FLAGS.hops_num,
+  # )
+  # test_embedding = model.forward(test_data.src_ego)
+  # test_labels = test_data.src_ego.src.labels
+  # test_indices = tf.math.argmax(test_embedding, 1, output_type=tf.int32)
+  # test_acc = tf.div(
+  #   tf.reduce_sum(tf.cast(tf.math.equal(test_indices, test_labels), tf.float32)),
+  #   tf.cast(tf.shape(test_labels)[0], tf.float32),
+  # )
 
   # train and test
   trainer = LocalTrainer()
   trainer.train(train_data.iterator, loss, optimizer, epochs=FLAGS.epochs)
-  trainer.test(test_data.iterator, test_acc)
+  # trainer.test(test_data.iterator, test_acc)
 
   # finish
   g.close()

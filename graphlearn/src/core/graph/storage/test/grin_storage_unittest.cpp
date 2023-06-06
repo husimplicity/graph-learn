@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     LOG(INFO) << "Done!";
   
     LOG(INFO) << "Feature tests";
-    auto node_store = std::make_shared<GrinNodeStorage>("paper", "feat_0,feat_1,feat_2,label");
+    auto node_store = std::make_shared<GrinNodeStorage>("paper", "feat_0;feat_1;feat_2;label");
     CHECK_EQ(node_store->Size(), 40000);
     CHECK_EQ(node_store->GetLabel(4), 55);
     CHECK_EQ(node_store->GetLabel(0), 95);

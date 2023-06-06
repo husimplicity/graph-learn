@@ -41,41 +41,48 @@ public:
     const std::string& node_type="",
     const std::string& use_attrs="") {
 
-    auto node_type_name = node_type;
-    boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(","));
-
-    // char* socket = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
-    // std::strcpy(socket, GLOBAL_FLAG(VineyardIPCSocket).c_str());
-    // char* gid = new char[std::to_string(GLOBAL_FLAG(VineyardGraphID)).size()];
-    // std::strcpy(gid, std::to_string(GLOBAL_FLAG(VineyardGraphID)).c_str());
-
+    std::vector<std::string> node_type_names;
+    boost::algorithm::split(node_type_names, node_type, boost::is_any_of("*"));
+    auto node_type_name = node_type_names.back();
+    std::cout << "node_type_name: " << node_type_name << std::endl;
+    boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(";"));
+    for (auto a : attrs_) {
+      std::cout << "attrs: " << a << std::endl;
+    }
     char** argv = new char*[2];
     argv[0] = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
     std::strcpy(argv[0], GLOBAL_FLAG(VineyardIPCSocket).c_str());
     argv[1] = new char[std::to_string(GLOBAL_FLAG(VineyardGraphID)).size()];
     std::strcpy(argv[1], std::to_string(GLOBAL_FLAG(VineyardGraphID)).c_str());
     int argc = sizeof(argv) / sizeof(char*);
-    std::cout << "argc: " << argc << " argv: " << argv[0] << " " << argv[1] <<std::endl;
+    std::cout << "argc: " << 2 << " argv: " << argv[0] << " " << argv[1] <<std::endl;
     partitioned_graph_ = grin_get_partitioned_graph_from_storage(2, argv);
     local_partitions_ = grin_get_local_partition_list(partitioned_graph_);
     partition_ = grin_get_partition_from_list(
       partitioned_graph_, local_partitions_, 0);
-
+    std::cout << "Node Partition Got" << std::endl;
     graph_ = grin_get_local_graph_by_partition(partitioned_graph_, partition_);
+    if (!graph_) {
+      std::cout << "graph_ is none" << std::endl;
+    }
     side_info_ = init_node_side_info(
       partitioned_graph_, partition_, graph_, attrs_, node_type_name);
+    if (!side_info_) {
+      std::cout << "side info is none" << std::endl;
+    }
     vertex_type_ = grin_get_vertex_type_by_name(graph_, node_type_name.c_str());
     auto vl = GetVertexListByType(graph_, vertex_type_);
     num_vertices_ = grin_get_vertex_num_by_type(graph_, vertex_type_);
     vertex_list_.reserve(num_vertices_);
-
+    std::cout << "num_vertices_: " << num_vertices_ << std::endl;
     for (size_t i = 0; i < num_vertices_; ++i) {
       auto v = grin_get_vertex_from_list(graph_, vl, i);
       vertex_list_.emplace_back(v);
     }
     grin_destroy_vertex_list(graph_, vl);
     delete[] argv;
-    LOG(INFO) << "Create GrinNodeStorage Done." << Size();
+    std::cout << "Create GrinNodeStorage Done." << Size() << std::endl;
+    std::cout << GetAttribute(0)->GetFloats(nullptr)[1] << std::endl;
   }
 
   virtual ~GrinNodeStorage() {
@@ -85,9 +92,9 @@ public:
     }
     grin_destroy_vertex_type(graph_, vertex_type_);
     grin_destroy_graph(graph_);
-    // grin_destroy_partition(partitioned_graph_, partition_);
-    // grin_destroy_partition_list(partitioned_graph_, local_partitions_);
-    // grin_destroy_partitioned_graph(partitioned_graph_);
+    grin_destroy_partition(partitioned_graph_, partition_);
+    grin_destroy_partition_list(partitioned_graph_, local_partitions_);
+    grin_destroy_partitioned_graph(partitioned_graph_);
   }
 
   virtual void Lock() override {}
@@ -257,7 +264,6 @@ public:
 
     auto properties = grin_get_vertex_property_list_by_type(
       graph_, vertex_type_);
-
     auto property_size = grin_get_vertex_property_list_size(graph_, properties);
     for (size_t i = 0; i < property_size; ++i) {
       auto property = grin_get_vertex_property_from_list(graph_, properties, i);
