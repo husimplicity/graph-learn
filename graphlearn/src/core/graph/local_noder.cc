@@ -85,6 +85,7 @@ public:
 
   Status LookupNodes(const LookupNodesRequest* req,
                      LookupNodesResponse* res) override {
+    auto current = std::chrono::system_clock::now();
     int64_t node_id = 0;
     LookupNodesRequest* request = const_cast<LookupNodesRequest*>(req);
     res->SetSideInfo(storage_->GetSideInfo(), req->Size());
@@ -94,6 +95,8 @@ public:
       res->AppendTimestamp(storage_->GetTimestamp(node_id));
       res->AppendAttribute(storage_->GetAttribute(node_id).get());
     }
+    std::cout << "LookupNodes elapsed: " << req->Size() << " nodes, "
+              << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - current).count() << " seconds" << std::endl;
     return Status::OK();
   }
 

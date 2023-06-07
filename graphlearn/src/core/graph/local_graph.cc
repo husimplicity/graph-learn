@@ -72,6 +72,7 @@ public:
 
   Status LookupEdges(const LookupEdgesRequest* req,
                      LookupEdgesResponse* res) override {
+    auto current = std::chrono::system_clock::now();
     int64_t edge_id = 0;
     int64_t src_id = 0;
     LookupEdgesRequest* request = const_cast<LookupEdgesRequest*>(req);
@@ -82,6 +83,8 @@ public:
       res->AppendTimestamp(storage_->GetEdgeTimestamp(edge_id));
       res->AppendAttribute(storage_->GetEdgeAttribute(edge_id).get());
     }
+    std::cout << "LookupEdges elapsed: " << req->Size() << " edges, "
+              << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - current).count() << " seconds" << std::endl;
     return Status::OK();
   }
 
