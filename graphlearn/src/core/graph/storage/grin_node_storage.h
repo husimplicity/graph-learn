@@ -46,9 +46,6 @@ public:
     auto node_type_name = node_type_names.back();
     std::cout << "node_type_name: " << node_type_name << std::endl;
     boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(";"));
-    for (auto a : attrs_) {
-      std::cout << "attrs: " << a << std::endl;
-    }
     char** argv = new char*[2];
     argv[0] = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
     std::strcpy(argv[0], GLOBAL_FLAG(VineyardIPCSocket).c_str());

@@ -96,6 +96,17 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   for (size_t idx = 0; idx < field_size; ++idx) {
     auto field = grin_get_edge_property_from_list(graph, fields, idx);
     std::string field_name = grin_get_edge_property_name(graph, edge_type, field);
+
+    // check special attributes before been filtered
+    if (field_name == "label") {
+      side_info->format |= kLabeled;
+    } else if (field_name == "weight") {
+      side_info->format |= kWeighted;
+    } else if (field_name == "timestamp") {
+      side_info->format |= kTimestamped;
+    }
+    side_info->format |= kAttributed;
+
     if (attrs.find(field_name) == attrs.end()) {
       continue;
     }
@@ -118,15 +129,6 @@ SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
     default:
       break;
     }
-
-    if (field_name == "label") {
-      side_info->format |= kLabeled;
-    } else if (field_name == "weight") {
-      side_info->format |= kWeighted;
-    } else if (field_name == "timestamp") {
-      side_info->format |= kTimestamped;
-    }
-    side_info->format |= kAttributed;
 
     grin_destroy_edge_property(graph, field);
   }
@@ -171,6 +173,17 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
   for (size_t idx = 0; idx < field_size; ++idx) {
     auto field = grin_get_vertex_property_from_list(graph, fields, idx);
     std::string field_name = grin_get_vertex_property_name(graph, node_type, field);\
+
+    // check special attributes before been filtered
+    if (field_name == "label") {
+      side_info->format |= kLabeled;
+    } else if (field_name == "weight") {
+      side_info->format |= kWeighted;
+    } else if (field_name == "timestamp") {
+      side_info->format |= kTimestamped;
+    }
+    side_info->format |= kAttributed;
+
     if (attrs.find(field_name) == attrs.end()) {
       continue;
     }
@@ -193,16 +206,6 @@ SideInfo* init_node_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,
     default:
       break;
     }
-
-    if (field_name == "label") {
-      side_info->format |= kLabeled;
-    } else if (field_name == "weight") {
-      side_info->format |= kWeighted;
-    } else if (field_name == "timestamp") {
-      side_info->format |= kTimestamped;
-    }
-    side_info->format |= kAttributed;
-
     grin_destroy_vertex_property(graph, field);
   }
 
