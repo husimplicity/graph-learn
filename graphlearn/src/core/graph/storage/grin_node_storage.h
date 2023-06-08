@@ -272,11 +272,11 @@ public:
 
     for (auto property : attrs_) {
       auto dtype = grin_get_vertex_property_datatype(graph_, property);
-      auto current = std::chrono::system_clock::now();
-      for (int i = 0; i < 100000; ++i) {
-        dtype = grin_get_vertex_property_datatype(graph_, property);
-      }
-      std::cout << "grin_get_vertex_property_datatype: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - current).count() << " milliseconds"<< std::endl;
+      // auto current = std::chrono::system_clock::now();
+      // for (int i = 0; i < 100000; ++i) {
+      //   dtype = grin_get_vertex_property_datatype(graph_, property);
+      // }
+      // std::cout << "grin_get_vertex_property_datatype: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - current).count() << " milliseconds"<< std::endl;
 
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
