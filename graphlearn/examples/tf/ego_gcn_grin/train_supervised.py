@@ -49,6 +49,7 @@ flags.DEFINE_float('learning_rate', 0.01, 'learning rate')
 
 flags.DEFINE_string('vineyard_socket', os.environ.get("VIHEYARD_IPC_SOCKET", "/tmp/vineyard.sock"), 'vineyard IPC socket location')
 flags.DEFINE_integer('vineyard_fragment_id', -1, 'Object ID for vineyard fragment or vineyard fragment group')
+gl.set_timeout(120000)
 
 nbrs_num = json.loads(FLAGS.nbrs_num)
 
@@ -80,7 +81,7 @@ def load_graph():
   # g.node_view(FLAGS.node_type, gl.Mask.VAL, 0, 100, (75, 85))
   # g.node_view(FLAGS.node_type, gl.Mask.TEST, 0, 100, (85, 100))
   g._with_grin = True
-  g._with_vineyard = True
+  g._with_vineyard = False
   return g
 
 def main(unused_argv):

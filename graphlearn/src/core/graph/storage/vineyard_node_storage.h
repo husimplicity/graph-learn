@@ -132,6 +132,7 @@ public:
       }
       all_ids_ = IdArray(selected_ids_.data(), selected_ids_.size());
     }
+    LOG(INFO) << "Vineyard Node Storage Done " << Size();
   }
 
   virtual ~VineyardNodeStorage() = default;

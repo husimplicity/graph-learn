@@ -45,7 +45,8 @@ public:
     boost::algorithm::split(node_type_names, node_type, boost::is_any_of("*"));
     auto node_type_name = node_type_names.back();
     std::cout << "node_type_name: " << node_type_name << std::endl;
-    boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(";"));
+    boost::algorithm::split(attrs_names_, use_attrs, boost::is_any_of(";"));
+
     char** argv = new char*[2];
     argv[0] = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
     std::strcpy(argv[0], GLOBAL_FLAG(VineyardIPCSocket).c_str());
@@ -63,11 +64,18 @@ public:
       std::cout << "graph_ is none" << std::endl;
     }
     side_info_ = init_node_side_info(
-      partitioned_graph_, partition_, graph_, attrs_, node_type_name);
+      partitioned_graph_, partition_, graph_, attrs_names_, node_type_name);
     if (!side_info_) {
       std::cout << "side info is none" << std::endl;
     }
     vertex_type_ = grin_get_vertex_type_by_name(graph_, node_type_name.c_str());
+    for (auto& attr_name : attrs_names_) {
+      auto property = grin_get_vertex_property_by_name(
+        graph_, vertex_type_, attr_name.c_str());
+      if (property) {
+        attrs_.insert(property);
+      }
+    }
     auto vl = GetVertexListByType(graph_, vertex_type_);
     num_vertices_ = grin_get_vertex_num_by_type(graph_, vertex_type_);
     vertex_list_.reserve(num_vertices_);
@@ -86,6 +94,9 @@ public:
     // delete side_info_;
     for (auto v : vertex_list_) {
       grin_destroy_vertex(graph_, v);
+    }
+    for (auto attr : attrs_) {
+      grin_destroy_vertex_property(graph_, attr);
     }
     grin_destroy_vertex_type(graph_, vertex_type_);
     grin_destroy_graph(graph_);
@@ -173,7 +184,7 @@ public:
     auto node_property = grin_get_vertex_property_by_name(
       graph_, vertex_type_, std::string("label").c_str());
     auto node_dtype = grin_get_vertex_property_datatype(graph_, node_property);
-    
+
     int32_t label;
     switch (node_dtype) {
     case GRIN_DATATYPE::Int32:
@@ -259,12 +270,14 @@ public:
 
     auto attr = NewDataHeldAttributeValue();
 
-    auto properties = grin_get_vertex_property_list_by_type(
-      graph_, vertex_type_);
-    auto property_size = grin_get_vertex_property_list_size(graph_, properties);
-    for (size_t i = 0; i < property_size; ++i) {
-      auto property = grin_get_vertex_property_from_list(graph_, properties, i);
+    for (auto property : attrs_) {
       auto dtype = grin_get_vertex_property_datatype(graph_, property);
+      auto current = std::chrono::system_clock::now();
+      for (int i = 0; i < 100000; ++i) {
+        dtype = grin_get_vertex_property_datatype(graph_, property);
+      }
+      std::cout << "grin_get_vertex_property_datatype: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - current).count() << " milliseconds"<< std::endl;
+
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
         if (side_info_->i_num > 0) {
@@ -294,13 +307,21 @@ public:
           attr->Add(grin_get_vertex_property_value_of_float(graph_, vertex_list_[node_id], property));
         }
         break;
-      case GRIN_DATATYPE::Double:
+      case GRIN_DATATYPE::Double: {
+        auto current0 = std::chrono::system_clock::now();
         if (side_info_->f_num > 0) {
+          // double v;
+          // for (int i = 0; i < 100000; ++i) {
+          //   v = grin_get_vertex_property_value_of_double(graph_, vertex_list_[node_id], property);
+          // }
           float v = grin_get_vertex_property_value_of_double(graph_, vertex_list_[node_id], property);
+          // auto timing = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - current0).count();
+          // std::cout << " grin_get_vertex_property_value: " << timing << " milliseconds"<< std::endl;
           attr->Add(v);
+          // attr->Add((float)v);
         }
         break;
-      
+      }
       case GRIN_DATATYPE::String:
         if (side_info_->s_num > 0) {
           std::string s = grin_get_vertex_property_value_of_string(graph_, vertex_list_[node_id], property);
@@ -311,11 +332,7 @@ public:
       default:
         break;
       }
-
-      grin_destroy_vertex_property(graph_, property);
     }
-
-    grin_destroy_vertex_property_list(graph_, properties);
 
     return Attribute(attr, true);
   }
@@ -402,7 +419,8 @@ private:
   std::vector<GRIN_VERTEX> vertex_list_;
   size_t num_vertices_;
 
-  std::set<std::string> attrs_;
+  std::set<std::string> attrs_names_;
+  std::set<uint64_t> attrs_;
 
   SideInfo *side_info_ = nullptr;
 

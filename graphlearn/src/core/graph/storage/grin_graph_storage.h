@@ -54,7 +54,8 @@ public:
     const std::string& use_attrs=""){
 
     auto edge_type_name = edge_label;
-    boost::algorithm::split(attrs_, use_attrs, boost::is_any_of(";"));
+    boost::algorithm::split(attrs_names_, use_attrs, boost::is_any_of(";"));
+    std::cout << "edge_type_name: " << edge_type_name << std::endl;
 
     char** argv = new char*[2];
     argv[0] = new char[GLOBAL_FLAG(VineyardIPCSocket).size()];
@@ -70,6 +71,13 @@ public:
     std::cout << "Get part done!" << std::endl;
     graph_ = grin_get_local_graph_by_partition(partitioned_graph_, partition_);
     edge_type_ = grin_get_edge_type_by_name(graph_, edge_type_name.c_str());
+    for (auto attr_name : attrs_names_) {
+      auto property = grin_get_edge_property_by_name(
+        graph_, edge_type_, attr_name.c_str());
+      if (property) {
+        attrs_.insert(property);
+      }
+    }
     auto src_types = grin_get_src_types_by_edge_type(graph_, edge_type_);
     src_type_ = grin_get_vertex_type_from_list(graph_, src_types, 0);
     auto dst_types = grin_get_dst_types_by_edge_type(graph_, edge_type_);
@@ -100,7 +108,7 @@ public:
     auto src_type_name = grin_get_vertex_type_name(graph_, src_type_);
     auto dst_type_name = grin_get_vertex_type_name(graph_, dst_type_);
     side_info_ = init_edge_side_info(
-      partitioned_graph_, partition_, graph_, attrs_, 
+      partitioned_graph_, partition_, graph_, attrs_names_, 
       edge_type_name, src_type_name, dst_type_name);
 
     grin_destroy_vertex_type_list(graph_, src_types);
@@ -319,10 +327,7 @@ public:
 
     auto attr = NewDataHeldAttributeValue();
 
-    auto properties = grin_get_edge_property_list_by_type(graph_, edge_type_);
-    auto property_size = grin_get_edge_property_list_size(graph_, properties);
-    for (size_t i = 0; i < property_size; ++i) {
-      auto property = grin_get_edge_property_from_list(graph_, properties, i);
+    for (auto property : attrs_) {
       auto dtype = grin_get_edge_property_datatype(graph_, property);
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
@@ -370,11 +375,7 @@ public:
       default:
         break;
       }
-
-      grin_destroy_edge_property(graph_, property);
     }
-
-    grin_destroy_edge_property_list(graph_, properties);
 
     return Attribute(attr, true);
   }
@@ -486,7 +487,8 @@ private:
   std::vector<GRIN_EDGE> edge_list_;
   size_t num_vertices_;
 
-  std::set<std::string> attrs_;
+  std::set<std::string> attrs_names_;
+  std::set<uint64_t> attrs_;
 
   SideInfo *side_info_ = nullptr;
 
