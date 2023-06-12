@@ -77,7 +77,9 @@ public:
     int64_t src_id = 0;
     LookupEdgesRequest* request = const_cast<LookupEdgesRequest*>(req);
     res->SetSideInfo(storage_->GetSideInfo(), req->Size());
+    std::cout << "LookupEdges start" << std::endl;
     while (request->Next(&edge_id, &src_id)) {
+      std::cout << "edge_id: " << edge_id << ", src_id: " << src_id << std::endl;
       res->AppendWeight(storage_->GetEdgeWeight(edge_id));
       res->AppendLabel(storage_->GetEdgeLabel(edge_id));
       res->AppendTimestamp(storage_->GetEdgeTimestamp(edge_id));

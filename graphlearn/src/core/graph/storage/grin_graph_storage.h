@@ -21,8 +21,9 @@ limitations under the License.
 #include <numeric>
 #include <cstdio>
 
-extern "C" {
-
+#include "boost/algorithm/string.hpp"
+#include "boost/algorithm/string/split.hpp"
+#include "vineyard/graph/grin/predefine.h"
 #include "vineyard/graph/grin/include/topology/adjacentlist.h"
 #include "vineyard/graph/grin/include/topology/structure.h"
 #include "vineyard/graph/grin/include/topology/vertexlist.h"
@@ -34,8 +35,6 @@ extern "C" {
 #include "vineyard/graph/grin/include/property/row.h"
 #include "vineyard/graph/grin/include/property/property.h"
 #include "vineyard/graph/grin/include/property/propertylist.h"
-}
-#include "vineyard/graph/grin/src/predefine.h"
 
 #include "core/graph/storage/graph_storage.h"
 #include "core/graph/storage/grin_storage_utils.h"
@@ -71,11 +70,13 @@ public:
     std::cout << "Get part done!" << std::endl;
     graph_ = grin_get_local_graph_by_partition(partitioned_graph_, partition_);
     edge_type_ = grin_get_edge_type_by_name(graph_, edge_type_name.c_str());
-    for (auto attr_name : attrs_names_) {
+
+    InitAttributeList(attrs_);
+    for (auto& attr_name : attrs_names_) {
       auto property = grin_get_edge_property_by_name(
         graph_, edge_type_, attr_name.c_str());
       if (property) {
-        attrs_.insert(property);
+        attrs_[grin_get_edge_property_datatype(graph_, property)].push_back(property);
       }
     }
     auto src_types = grin_get_src_types_by_edge_type(graph_, edge_type_);
@@ -89,9 +90,7 @@ public:
 
     for (size_t i = 0; i < num_vertices_; ++i) {
       auto v = grin_get_vertex_from_list(graph_, src_vertex_list, i);
-      auto adj_all = grin_get_adjacent_list(graph_, GRIN_DIRECTION::OUT, v);
-      auto adj_list = grin_select_edge_type_for_adjacent_list(
-        graph_, edge_type_, adj_all);
+      auto adj_list = grin_get_adjacent_list_by_edge_type(graph_, GRIN_DIRECTION::OUT, v, edge_type_);
       indptr_[i + 1] = grin_get_adjacent_list_size(graph_, adj_list) + indptr_[i];
       auto it = grin_get_adjacent_list_begin(graph_, adj_list);
       while (grin_is_adjacent_list_end(graph_, it) == false) {
@@ -101,7 +100,6 @@ public:
       }
       grin_destroy_adjacent_list_iter(graph_, it);
       grin_destroy_adjacent_list(graph_, adj_list);
-      grin_destroy_adjacent_list(graph_, adj_all);
       grin_destroy_vertex(graph_, v);
     }
 
@@ -115,7 +113,7 @@ public:
     grin_destroy_vertex_type_list(graph_, dst_types);
     grin_destroy_vertex_list(graph_, src_vertex_list);
     delete[] argv;
-    LOG(INFO) << "Create GrinGraphStorage Done.";
+    std::cout << "Create GrinGraphStorage Done." << std::endl;
   }
 
   virtual ~GrinGraphStorage() {
@@ -327,48 +325,63 @@ public:
 
     auto attr = NewDataHeldAttributeValue();
 
-    for (auto property : attrs_) {
-      auto dtype = grin_get_edge_property_datatype(graph_, property);
+    for (auto& [dtype, properties] : attrs_) {
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_edge_property_value_of_int32(graph_, edge_list_[edge_id], property);
-          attr->Add(v);
+          for (auto property : properties) {
+            int64_t v = grin_get_edge_property_value_of_int32(graph_, edge_list_[edge_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::UInt32:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_edge_property_value_of_uint32(graph_, edge_list_[edge_id], property);
-          attr->Add(v);
+          for (auto property : properties) {
+            int64_t v = grin_get_edge_property_value_of_uint32(graph_, edge_list_[edge_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::Int64:
         if (side_info_->i_num > 0) {
-          attr->Add((int64_t)grin_get_edge_property_value_of_int64(graph_, edge_list_[edge_id], property));
+          for (auto property : properties) {
+            int64_t v = grin_get_edge_property_value_of_int64(graph_, edge_list_[edge_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::UInt64:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_edge_property_value_of_uint64(graph_, edge_list_[edge_id], property);
-          attr->Add(v);
+          for (auto property : properties) {
+            int64_t v = grin_get_edge_property_value_of_uint64(graph_, edge_list_[edge_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::Float:
         if (side_info_->f_num > 0) {
-          attr->Add(grin_get_edge_property_value_of_float(graph_, edge_list_[edge_id], property));
+          for (auto property : properties) {
+            float v = grin_get_edge_property_value_of_float(graph_, edge_list_[edge_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::Double:
         if (side_info_->f_num > 0) {
-          float v = grin_get_edge_property_value_of_double(graph_, edge_list_[edge_id], property);
-          attr->Add(v);
+          for (auto property : properties) {
+            float v = grin_get_edge_property_value_of_double(graph_, edge_list_[edge_id], property);
+            attr->Add(v);
+          }
         }
         break;
       
       case GRIN_DATATYPE::String:
         if (side_info_->s_num > 0) {
-          std::string s = grin_get_edge_property_value_of_string(graph_, edge_list_[edge_id], property);
-          attr->Add(s);
+          for (auto property : properties) {
+            std::string s = grin_get_edge_property_value_of_string(graph_, edge_list_[edge_id], property);
+            attr->Add(s);
+          }
         }
         break;
       
@@ -403,12 +416,9 @@ public:
   virtual IndexType GetInDegree(IdType dst_id) const override {
     auto dst_vertex_list = GetVertexListByType(graph_, dst_type_);
     auto v = grin_get_vertex_from_list(graph_, dst_vertex_list, dst_id);
-    auto adj_in = grin_get_adjacent_list(graph_, GRIN_DIRECTION::IN, v);
-    auto in_list = grin_select_edge_type_for_adjacent_list(
-      graph_, edge_type_, adj_in);
+    auto in_list = grin_get_adjacent_list_by_edge_type(graph_, GRIN_DIRECTION::IN, v, edge_type_);
     size_t deg = grin_get_adjacent_list_size(graph_, in_list);
     grin_destroy_adjacent_list(graph_, in_list);
-    grin_destroy_adjacent_list(graph_, adj_in);
     grin_destroy_vertex(graph_, v);
     grin_destroy_vertex_list(graph_, dst_vertex_list);
 
@@ -427,12 +437,9 @@ public:
     IndexType* in_degrees_ptr = in_degrees.get();
     for (size_t i = 0; i < num_dst; ++i) {
       auto v = grin_get_vertex_from_list(graph_, dst_vertex_list, i);
-      auto adj_in = grin_get_adjacent_list(graph_, GRIN_DIRECTION::IN, v);
-      auto in_list = grin_select_edge_type_for_adjacent_list(
-        graph_, edge_type_, adj_in);
+      auto in_list = grin_get_adjacent_list_by_edge_type(graph_, GRIN_DIRECTION::IN, v, edge_type_);
       in_degrees_ptr[i] = grin_get_adjacent_list_size(graph_, in_list);
       grin_destroy_adjacent_list(graph_, in_list);
-      grin_destroy_adjacent_list(graph_, adj_in);
       grin_destroy_vertex(graph_, v);
     }
     grin_destroy_vertex_list(graph_, dst_vertex_list);
@@ -488,7 +495,7 @@ private:
   size_t num_vertices_;
 
   std::set<std::string> attrs_names_;
-  std::set<uint64_t> attrs_;
+  std::map<GRIN_DATATYPE, std::vector<uint64_t>> attrs_;
 
   SideInfo *side_info_ = nullptr;
 

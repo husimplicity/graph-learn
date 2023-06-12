@@ -19,7 +19,6 @@ limitations under the License.
 #include <cstdint>
 #include <vector>
 #include "core/graph/storage/types.h"
-#include "vineyard/graph/grin/src/predefine.h"
 
 namespace graphlearn {
 namespace io {

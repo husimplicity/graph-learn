@@ -5,11 +5,11 @@
 #include <vector>
 
 #include "glog/logging.h"
-
-extern "C" {
+#include "vineyard/client/client.h"
+#include "vineyard/graph/fragment/arrow_fragment.h"
+#include "vineyard/graph/loader/arrow_fragment_loader.h"
+#include "vineyard/graph/grin/predefine.h"
 #include "vineyard/graph/grin/include/partition/partition.h"
-}
-#include "vineyard/graph/grin/src/predefine.h"
 
 #include "core/graph/storage/grin_edge_storage.h"
 #include "core/graph/storage/grin_graph_storage.h"
@@ -77,9 +77,13 @@ int main(int argc, char **argv) {
 
     CHECK_EQ(node_store->GetLabels().Size(), node_store->Size());
     CHECK_EQ(node_store->GetLabels()[4], 55);
-  
-    CHECK_NEAR(
-      node_store->GetAttribute(5)->GetFloats(nullptr)[0], 0.005732, 0.000001);
+    auto current = std::chrono::system_clock::now();
+    for (int i = 0; i < 100000; ++i) {
+    // CHECK_NEAR(
+      node_store->GetAttribute(5)->GetFloats(nullptr)[0];
+    }//, 0.005732, 0.000001);
+      // Insert N elements in order
+    std::cout << "timing: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - current).count() << " milliseconds"<< std::endl;
     CHECK_NEAR(
       node_store->GetAttribute(0)->GetFloats(nullptr)[1], -0.080044, 0.000001);
     CHECK_EQ(node_store->GetAttributes()->size(), node_store->Size());

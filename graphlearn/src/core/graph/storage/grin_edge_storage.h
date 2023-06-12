@@ -18,8 +18,7 @@ limitations under the License.
 
 #include <memory>
 
-extern "C" {
-
+#include "vineyard/graph/grin/predefine.h"
 #include "vineyard/graph/grin/include/topology/adjacentlist.h"
 #include "vineyard/graph/grin/include/topology/structure.h"
 #include "vineyard/graph/grin/include/topology/vertexlist.h"
@@ -28,8 +27,7 @@ extern "C" {
 #include "vineyard/graph/grin/include/index/order.h"
 #include "vineyard/graph/grin/include/property/type.h"
 #include "vineyard/graph/grin/include/partition/partition.h"
-}
-#include "vineyard/graph/grin/src/predefine.h"
+
 
 #include "core/graph/storage/edge_storage.h"
 #include "core/graph/storage/grin_graph_storage.h"

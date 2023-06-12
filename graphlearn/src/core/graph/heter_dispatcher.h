@@ -20,7 +20,6 @@ limitations under the License.
 #include <string>
 #include <unordered_map>
 #include "common/threading/sync/lock.h"
-#include "vineyard/graph/grin/src/predefine.h"
 
 namespace graphlearn {
 

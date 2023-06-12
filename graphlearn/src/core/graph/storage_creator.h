@@ -18,7 +18,6 @@ limitations under the License.
 
 #include "core/graph/storage/graph_storage.h"
 #include "core/graph/storage/node_storage.h"
-#include "vineyard/graph/grin/src/predefine.h"
 
 namespace graphlearn {
 

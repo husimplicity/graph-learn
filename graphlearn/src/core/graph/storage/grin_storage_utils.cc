@@ -47,22 +47,28 @@ using graphlearn::io::SideInfo;
 GraphStorage* NewGrinGraphStorage(
     const std::string& edge_label,
     const std::string& use_attrs="") {
-  LOG(INFO) << "Create GrinGraphStorage.";
   return new GrinGraphStorage(edge_label, use_attrs);
 }
 
 NodeStorage* NewGrinNodeStorage(    
     const std::string& node_type="",
     const std::string& use_attrs="") {
-  LOG(INFO) << "Create GrinNodeStorage.";
   return new GrinNodeStorage(node_type, use_attrs);
 }
 
 GRIN_VERTEX_LIST GetVertexListByType(GRIN_GRAPH graph, GRIN_VERTEX_TYPE vtype) {
-  auto vl_all = grin_get_vertex_list(graph);
-  auto vl = grin_select_type_for_vertex_list(graph, vtype, vl_all);
-  grin_destroy_vertex_list(graph, vl_all);
+  auto vl = grin_get_vertex_list_by_type(graph, vtype);
   return vl;
+}
+
+void InitAttributeList(std::map<GRIN_DATATYPE, std::vector<uint64_t>>& attrs) {
+  attrs.insert({GRIN_DATATYPE::Int32, std::vector<uint64_t>()});
+  attrs.insert({GRIN_DATATYPE::UInt32, std::vector<uint64_t>()});
+  attrs.insert({GRIN_DATATYPE::Int64, std::vector<uint64_t>()});
+  attrs.insert({GRIN_DATATYPE::UInt64, std::vector<uint64_t>()});
+  attrs.insert({GRIN_DATATYPE::Float, std::vector<uint64_t>()});
+  attrs.insert({GRIN_DATATYPE::Double, std::vector<uint64_t>()});
+  attrs.insert({GRIN_DATATYPE::String, std::vector<uint64_t>()});
 }
 
 SideInfo* init_edge_side_info(const GRIN_PARTITIONED_GRAPH& partitioned_graph,

@@ -16,7 +16,8 @@ limitations under the License.
 #ifndef GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_TOPO_STORAGE_H_
 #define GRAPHLEARN_CORE_GRAPH_STORAGE_GRIN_TOPO_STORAGE_H_
 
-extern "C" {
+
+#include "vineyard/graph/grin/predefine.h"
 #include "vineyard/graph/grin/include/topology/adjacentlist.h"
 #include "vineyard/graph/grin/include/topology/structure.h"
 #include "vineyard/graph/grin/include/topology/vertexlist.h"
@@ -25,8 +26,7 @@ extern "C" {
 #include "vineyard/graph/grin/include/index/order.h"
 #include "vineyard/graph/grin/include/property/type.h"
 #include "vineyard/graph/grin/include/partition/partition.h"
-}
-#include "vineyard/graph/grin/src/predefine.h"
+
 
 #include "core/graph/storage/topo_storage.h"
 #include "core/graph/storage/grin_graph_storage.h"

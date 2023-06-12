@@ -19,14 +19,15 @@ limitations under the License.
 #include <iostream>
 #include <cstdint>
 #include <vector>
+#include "boost/algorithm/string.hpp"
+#include "boost/algorithm/string/split.hpp"
+
 #include "core/graph/storage/types.h"
 
-extern "C" {
-
+#include "vineyard/graph/grin/predefine.h"
 #include "vineyard/graph/grin/include/topology/adjacentlist.h"
 #include "vineyard/graph/grin/include/partition/partition.h"
-}
-#include "vineyard/graph/grin/src/predefine.h"
+
 
 #include "core/graph/storage/node_storage.h"
 #include "core/graph/storage/grin_storage_utils.h"
@@ -69,11 +70,13 @@ public:
       std::cout << "side info is none" << std::endl;
     }
     vertex_type_ = grin_get_vertex_type_by_name(graph_, node_type_name.c_str());
+
+    InitAttributeList(attrs_);
     for (auto& attr_name : attrs_names_) {
       auto property = grin_get_vertex_property_by_name(
         graph_, vertex_type_, attr_name.c_str());
       if (property) {
-        attrs_.insert(property);
+        attrs_[grin_get_vertex_property_datatype(graph_, property)].push_back(property);
       }
     }
     auto vl = GetVertexListByType(graph_, vertex_type_);
@@ -94,10 +97,10 @@ public:
     // delete side_info_;
     for (auto v : vertex_list_) {
       grin_destroy_vertex(graph_, v);
-    }
-    for (auto attr : attrs_) {
-      grin_destroy_vertex_property(graph_, attr);
-    }
+    } 
+    // for (auto attr : attrs_) {
+    //   grin_destroy_vertex_property(graph_, attr);
+    // }
     grin_destroy_vertex_type(graph_, vertex_type_);
     grin_destroy_graph(graph_);
     grin_destroy_partition(partitioned_graph_, partition_);
@@ -270,62 +273,63 @@ public:
 
     auto attr = NewDataHeldAttributeValue();
 
-    for (auto property : attrs_) {
-      auto dtype = grin_get_vertex_property_datatype(graph_, property);
-      // auto current = std::chrono::system_clock::now();
-      // for (int i = 0; i < 100000; ++i) {
-      //   dtype = grin_get_vertex_property_datatype(graph_, property);
-      // }
-      // std::cout << "grin_get_vertex_property_datatype: " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - current).count() << " milliseconds"<< std::endl;
-
+    for (const auto& [dtype, properties] : attrs_) {
       switch(dtype) {
       case GRIN_DATATYPE::Int32:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_vertex_property_value_of_int32(graph_, vertex_list_[node_id], property);
-          attr->Add(v);
+          for (auto property : properties) {
+            int64_t v = grin_get_vertex_property_value_of_int32(graph_, vertex_list_[node_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::UInt32:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_vertex_property_value_of_uint32(graph_, vertex_list_[node_id], property);
-          attr->Add(v);
+          for (auto property : properties) {
+            int64_t v = grin_get_vertex_property_value_of_uint32(graph_, vertex_list_[node_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::Int64:
         if (side_info_->i_num > 0) {
-          attr->Add((int64_t)grin_get_vertex_property_value_of_int64(graph_, vertex_list_[node_id], property));
+          for (auto property : properties) {
+            int64_t v = grin_get_vertex_property_value_of_int64(graph_, vertex_list_[node_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::UInt64:
         if (side_info_->i_num > 0) {
-          int64_t v = grin_get_vertex_property_value_of_uint64(graph_, vertex_list_[node_id], property);
-          attr->Add(v);
+          for (auto property : properties) {
+            int64_t v = grin_get_vertex_property_value_of_uint64(graph_, vertex_list_[node_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::Float:
         if (side_info_->f_num > 0) {
-          attr->Add(grin_get_vertex_property_value_of_float(graph_, vertex_list_[node_id], property));
+          for (auto property : properties) {
+            float v = grin_get_vertex_property_value_of_float(graph_, vertex_list_[node_id], property);
+            attr->Add(v);
+          }
         }
         break;
       case GRIN_DATATYPE::Double: {
-        auto current0 = std::chrono::system_clock::now();
         if (side_info_->f_num > 0) {
-          // double v;
-          // for (int i = 0; i < 100000; ++i) {
-          //   v = grin_get_vertex_property_value_of_double(graph_, vertex_list_[node_id], property);
-          // }
-          float v = grin_get_vertex_property_value_of_double(graph_, vertex_list_[node_id], property);
-          // auto timing = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - current0).count();
-          // std::cout << " grin_get_vertex_property_value: " << timing << " milliseconds"<< std::endl;
-          attr->Add(v);
-          // attr->Add((float)v);
+          for (auto property : properties) {
+            float v = grin_get_vertex_property_value_of_double(graph_, vertex_list_[node_id], property);
+            attr->Add(v);
+          }
         }
         break;
       }
       case GRIN_DATATYPE::String:
         if (side_info_->s_num > 0) {
-          std::string s = grin_get_vertex_property_value_of_string(graph_, vertex_list_[node_id], property);
-          attr->Add(s);
+          for (auto property : properties) {
+            std::string s = grin_get_vertex_property_value_of_string(graph_, vertex_list_[node_id], property);
+            attr->Add(s);
+          }
         }
         break;
       
@@ -420,7 +424,7 @@ private:
   size_t num_vertices_;
 
   std::set<std::string> attrs_names_;
-  std::set<uint64_t> attrs_;
+  std::map<GRIN_DATATYPE, std::vector<uint64_t>> attrs_;
 
   SideInfo *side_info_ = nullptr;
 
