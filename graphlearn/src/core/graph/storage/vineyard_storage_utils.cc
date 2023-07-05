@@ -121,8 +121,14 @@ AttributeValue *arrow_line_to_attribute_value(
     attr->Add(value);
   }
   for (const auto& idx: f64_indexes) {
-    auto value = vineyard::property_graph_utils::ValueGetter<double>::Value(
-        table_accessors[idx], row_index);
+    // double value;
+    // auto current = std::chrono::system_clock::now();
+    // for (int i = 0; i < 1000000000; ++i) {
+    double value = vineyard::property_graph_utils::ValueGetter<double>::Value(
+      table_accessors[idx], row_index);
+    // }
+    // auto timing = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - current).count();
+    // std::cout << " vineyard_get_vertex_property_value: " << timing << " milliseconds"<< std::endl;
     attr->Add(static_cast<float>(value));
   }
   for (const auto& idx: s_indexes) {
